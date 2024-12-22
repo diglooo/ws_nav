@@ -1,0 +1,27 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "${default}",
+        "limitSymbolsToIncludedHeaders": false
+      },
+      "includePath": [
+        "/home/diglo/ws_nav/install/turtlebot3_msgs/include/**",
+        "/home/diglo/ws_nav/install/dynamixel_sdk_custom_interfaces/include/**",
+        "/home/diglo/ws_nav/install/dynamixel_sdk/include/**",
+        "/opt/ros/humble/include/**",
+        "/home/diglo/ws_nav/src/DynamixelSDK/dynamixel_sdk/include/**",
+        "/home/diglo/ws_nav/src/DynamixelSDK/dynamixel_sdk_examples/include/**",
+        "/home/diglo/ws_nav/src/diglobot2/include/**",
+        "/home/diglo/ws_nav/src/turtlebot3/turtlebot3_node/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS",
+      "intelliSenseMode": "gcc-x64",
+      "compilerPath": "/usr/bin/gcc",
+      "cStandard": "gnu11",
+      "cppStandard": "c++14"
+    }
+  ],
+  "version": 4
+}
