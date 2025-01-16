@@ -2,30 +2,49 @@ import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
 import numpy as np
-WHEEL_DIAMETER_M = 0.17
-WHEELBASE_M =0.37
-M_PER_REV = (WHEEL_DIAMETER_M*np.pi)
-START_SYMBOL = 0xABCD
+from tf2_ros import TransformBroadcaster
+from geometry_msgs.msg import TransformStamped
 import math
+import tf_transformations
 from diff_motor_msgs.msg import MotorState
-from .hoverboard_interface import hoverboard_node
 class diff_motor_controller(Node):
 
-    def __init__(self,hoverboard=None):
-        super().__init__('minimal_subscriber')
-        self.get_logger().info('Main node started')
-        self.subscription = self.create_subscription(
+    def __init__(self):
+        super().__init__('minolo_motor_controller')
+        self.get_logger().info('Motor Controller started')
+        self.declare_parameter('wheel_diameter',0.0)
+        self.declare_parameter('wheels_base',0.0)
+        self.wheel_diameter = self.get_parameter('wheel_diameter').get_parameter_value().double_value
+        self.get_logger().info('.%4f'%self.wheel_diameter)
+        self.wheels_base = self.get_parameter('wheels_base').get_parameter_value().double_value        
+        self.get_logger().info('.%4f'%self.wheels_base)
+        self.wheel_circumference = np.pi*self.wheel_diameter
+        
+        self.transform_subscriber = self.create_subscription(
             Twist,
             'cmd_vel',
             self.relay_vel,
             10)
-        self.hoverboard = hoverboard
+
         self.command_publisher = self.create_publisher(MotorState,'/motor_command',10)
-    
+
+        self.last_time = self.get_clock().now()
+
+        self.theta = 0
+        self.x = 0
+        self.y = 0
+
+        #self.odometry_timer = self.create_timer(0.01,self.update_odometry)
+        self.odometry_subscriber = self.create_subscription(MotorState,'/motor_feedback',self.update_odometry,10)
+        self.declare_parameter('frame_id', 'odom')
+        self.declare_parameter('child_frame_id', 'base_footprint')
+        self.tf_broadcaster = TransformBroadcaster(self)
+        self.frame_id = self.get_parameter('frame_id').value
+        self.child_frame_id = self.get_parameter('child_frame_id').value
 
     def get_diff_vel(self,t,r):  
-        rSpd = (np.int16)(((t.x + (r.z * WHEELBASE_M * 0.5))) / M_PER_REV *60)
-        lSpd = (np.int16)(((t.x - (r.z * WHEELBASE_M * 0.5))) / M_PER_REV *60)
+        rSpd = (np.int16)(((t.x + (r.z * self.wheels_base * 0.5))) / self.wheel_circumference *60)
+        lSpd = (np.int16)(((t.x - (r.z * self.wheels_base * 0.5))) / self.wheel_circumference *60)
         rSpd = np.clip(rSpd,-60,60)
         lSpd = np.clip(lSpd,-60,60)        
         return rSpd,lSpd
@@ -40,7 +59,70 @@ class diff_motor_controller(Node):
         self.command_publisher.publish(msg_cmd)
         #self.hoverboard.update_vels(vel_right,vel_left)
 
+    def update_odometry(self,feedback_msg):
+
+        #motor speed in RPM
         
+        rspd_rpm,lspd_rpm = feedback_msg.right_rpm,feedback_msg.left_rpm #self.hoverboard.get_curr_speed_r_l()
+
+        #we need velocities in m/s
+        rspd = (rspd_rpm * self.wheel_circumference) / 60
+        lspd = (lspd_rpm * self.wheel_circumference) / 60
+
+        #we need velocities in m/s and rad/s
+        actual_vel_t = (rspd + lspd) / 2
+        actual_vel_r = (rspd - lspd) / self.wheels_base
+
+        current_time = self.get_clock().now()
+        
+        delta_time = (current_time - self.last_time).nanoseconds * 1e-9
+        self.last_time = current_time
+
+        delta_theta = actual_vel_r * delta_time
+        self.theta += delta_theta
+    
+        delta_x = actual_vel_t * delta_time * math.cos(self.theta)
+        delta_y = actual_vel_t * delta_time * math.sin(self.theta)
+  
+        
+        # Update pose
+        self.x += delta_x
+        self.y += delta_y
+
+        # Normalize theta to [-pi, pi]
+        self.theta = (self.theta + math.pi) % (2 * math.pi) - math.pi
+
+        # Publish the transform
+        self.publish_transform()
+
+    def publish_transform(self):
+        """Broadcast the transform from odom to base_link."""
+        t = TransformStamped()
+
+        # Fill in the header
+        t.header.stamp = self.get_clock().now().to_msg()
+        t.header.frame_id = self.frame_id
+        t.child_frame_id = self.child_frame_id
+
+        # Set translation
+        t.transform.translation.x = self.x
+        t.transform.translation.y = self.y
+        t.transform.translation.z = 0.0
+
+        # Set rotation (convert theta to quaternion)
+        qz = math.sin(self.theta / 2.0)
+        qw = math.cos(self.theta / 2.0)
+
+        q = tf_transformations.quaternion_from_euler(0, 0, self.theta)
+
+        t.transform.rotation.x = q[0]
+        t.transform.rotation.y = q[1]
+        t.transform.rotation.z = q[2]
+        t.transform.rotation.w = q[3]
+
+        # Broadcast the transform
+        self.tf_broadcaster.sendTransform(t)
+
 def main(args=None):
     rclpy.init(args=args)
 
