@@ -1,4 +1,5 @@
 
+import rclpy
 from rclpy.node import Node
 from collections import namedtuple
 import numpy as np
@@ -13,7 +14,7 @@ from diff_motor_msgs.msg import MotorState
 from .hoverboard_interface import hoverboard_node
 class odometry_node(Node):
 
-    def __init__(self,hoverboard):
+    def __init__(self,hoverboard=None):
         super().__init__('odometry_node')
         self.get_logger().info('Main node started')
         self.hoverboard = hoverboard
@@ -24,17 +25,19 @@ class odometry_node(Node):
         self.x = 0
         self.y = 0
 
-        self.odometry_timer = self.create_timer(0.01,self.update_odometry)
+        #self.odometry_timer = self.create_timer(0.01,self.update_odometry)
+        self.odometry_subscriber = self.create_subscription(MotorState,'/motor_feedback',self.update_odometry,10)
         self.declare_parameter('frame_id', 'odom')
         self.declare_parameter('child_frame_id', 'base_footprint')
         self.tf_broadcaster = TransformBroadcaster(self)
         self.frame_id = self.get_parameter('frame_id').value
         self.child_frame_id = self.get_parameter('child_frame_id').value
 
-    def update_odometry(self):
+    def update_odometry(self,feedback_msg):
 
         #motor speed in RPM
-        rspd_rpm,lspd_rpm = self.hoverboard.get_curr_speed_r_l()
+        
+        rspd_rpm,lspd_rpm = feedback_msg.right_rpm,feedback_msg.left_rpm #self.hoverboard.get_curr_speed_r_l()
 
         #we need velocities in m/s
         rspd = (rspd_rpm * M_PER_REV) / 60
@@ -94,3 +97,15 @@ class odometry_node(Node):
         # Broadcast the transform
         self.tf_broadcaster.sendTransform(t)
 
+def main(args=None):
+    rclpy.init(args=args)
+
+    odometry = odometry_node()
+
+    rclpy.spin(odometry)
+    odometry.destroy_node()
+    rclpy.shutdown()
+
+
+if __name__ == '__main__':
+    main()

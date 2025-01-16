@@ -1,4 +1,5 @@
 
+import rclpy
 from rclpy.node import Node
 import serial
 import numpy as np
@@ -46,8 +47,8 @@ class hoverboard_node(Node):
         dev_data = struct.unpack('<Hhhhhhhhh',self.ser_port.read(18))
         msg_state = MotorState()
         msg_state.left_rpm = self.cmd_speed_l
-        msg_state.right_rpm = self.cmd.speed_r
-        feedback_publisher.publish(msg_state)
+        msg_state.right_rpm = self.cmd_speed_r
+        self.feedback_publisher.publish(msg_state)
         self.battery_volt = dev_data[5]
         #self.cur_speed_r = dev_data[3]
         #self.cur_speed_l = dev_data[4]
@@ -87,3 +88,16 @@ class hoverboard_node(Node):
         self.ser_port.write(msg_byte)
     def close_port(self):
         self.ser_port.close()
+def main(args=None):
+    rclpy.init(args=args)
+
+    hover = hoverboard_node()
+
+    rclpy.spin(hover)
+    hover.close_port()
+    hover.destroy_node()
+    rclpy.shutdown()
+
+
+if __name__ == '__main__':
+    main()

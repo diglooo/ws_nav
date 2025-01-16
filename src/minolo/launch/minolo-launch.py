@@ -42,10 +42,25 @@ def generate_launch_description():
         output='screen',
         parameters=[{'robot_description': robot_description}])
     
+    # motor_control_mode=Node(
+    #     package='minolo',
+    #     executable='minolo_bringup',
+    #     name='minolo_motor_interface',
+    #     output='screen')
     motor_control_mode=Node(
         package='minolo',
-        executable='minolo_bringup',
+        executable='motor_controller',
+        name='minolo_motor_controller',
+        output='screen')
+    motor_interface_node=Node(
+        package='minolo',
+        executable='motor_interface',
         name='minolo_motor_interface',
+        output='screen')
+    motor_odometry=Node(
+        package='minolo',
+        executable='odometry',
+        name='motor_odometry',
         output='screen')
     
     rviz_node=Node(
@@ -57,6 +72,8 @@ def generate_launch_description():
 
     return LaunchDescription([
         motor_control_mode,
+        motor_interface_node,
+        motor_odometry,
         lidar_node,
         robot_state_publisher_node,
         launch_nav2,
