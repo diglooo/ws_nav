@@ -35,7 +35,7 @@ class diff_motor_controller(Node):
         self.y = 0
 
         #self.odometry_timer = self.create_timer(0.01,self.update_odometry)
-        self.odometry_subscriber = self.create_subscription(MotorState,'/motor_feedback',self.update_odometry,10)
+        #self.odometry_subscriber = self.create_subscription(MotorState,'/motor_feedback',self.update_odometry,10)
         self.declare_parameter('frame_id', 'odom')
         self.declare_parameter('child_frame_id', 'base_footprint')
         self.tf_broadcaster = TransformBroadcaster(self)

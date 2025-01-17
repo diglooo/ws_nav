@@ -18,8 +18,8 @@ class hoverboard_node(Node):
         self.cmd_speed_r = 0
         self.cmd_speed_l =0
         
-        self.declare_parameter('read_frequency',100)
-        self.declare_parameter('write_frequency',100)
+        self.declare_parameter('read_frequency',50)
+        self.declare_parameter('write_frequency',200)
         self.declare_parameter('serial_port','/dev/ttyUSB1')
         self.declare_parameter('baude_rate',115200)
         self.declare_parameter('timeout_seconds',0.1)
