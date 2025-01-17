@@ -12,8 +12,13 @@
   <test_depend>ament_pep257</test_depend>
   <test_depend>python3-pytest</test_depend>
   <test_depend>diff_motor_msgs</test_depend>
+    <test_depend>nav_msgs</test_depend>
   <depend>diff_motor_msgs</depend>
+  <depend>tf2_geometry_msgs</depend>
+  <depend>nav_msgs</depend>
 <buildtool_depend>diff_motor_msgs</buildtool_depend>
+<buildtool_depend>tf2_geometry_msgs</buildtool_depend>
+<buildtool_depend>nav_msgs</buildtool_depend>
   <export>
     <build_type>ament_python</build_type>
   </export>

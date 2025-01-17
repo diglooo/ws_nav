@@ -68,12 +68,18 @@ def generate_launch_description():
         parameters=[{
                     'laser_scan_topic' : '/scan',
                     'odom_topic' : '/odom_rf2o',
-                    'publish_tf' : True,
+                    'publish_tf' : False,
                     'base_frame_id' : 'base_link',
                     'odom_frame_id' : 'odom',
                     'init_pose_from_topic' : '',
-                    'freq' : 5.0}],
-            
+                    'freq' : 5.0}],)
+    
+    localization_node=Node(
+        package='robot_localization',
+        executable='ekf_node',
+        name='ekf_filter_node',
+        output='screen',
+        parameters=[os.path.join(robot_params_dir, 'state_estimation_params.yaml')],       
     )
     rviz_node=Node(
         package='rviz2',
@@ -87,7 +93,8 @@ def generate_launch_description():
         motor_interface_node,
         lidar_node,
         robot_state_publisher_node,
-        launch_nav2,
+        #launch_nav2,
         launch_slam,
         lidar_odometry,
+        localization_node
    ])
