@@ -26,7 +26,9 @@ def generate_launch_description():
             )
     
     launch_slam = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([os.path.join(get_package_share_directory('slam_toolbox'), 'launch'), '/online_async_launch.py']))
+        PythonLaunchDescriptionSource([os.path.join(get_package_share_directory('slam_toolbox'), 'launch'), '/online_async_launch.py']),
+        launch_arguments={'slam_params_file': os.path.join(robot_params_dir, "slam_params.yaml")}.items(),
+        )
 
     lidar_node = LifecycleNode(package='ydlidar_ros2_driver',
         executable='ydlidar_ros2_driver_node',
@@ -84,7 +86,7 @@ def generate_launch_description():
         output='screen',
         parameters=[os.path.join(robot_params_dir, 'state_estimation_params.yaml')],       
     )
-    
+
     rviz_node=Node(
         package='rviz2',
         executable='rviz2',
@@ -97,7 +99,7 @@ def generate_launch_description():
         motor_interface_node,
         robot_state_publisher_node,
         lidar_node,
-        #launch_nav2,
+        launch_nav2,
         launch_slam,
         #lidar_odometry,
         #localization_node
