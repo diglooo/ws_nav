@@ -3,5 +3,5 @@ minolo_motor_controller:
     wheel_diameter: 0.17
     wheels_base: 0.37
     publish_tf: false
-    frame_id: base_link
+    frame_id: base_footprint
     child_frame_id: odom

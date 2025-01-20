@@ -12,7 +12,8 @@ find_package(rosidl_default_generators REQUIRED)
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
 rosidl_generate_interfaces(${PROJECT_NAME}
-  "msg/MotorState.msg"
+  "msg/MotorCommand.msg"
+  "msg/MotorFeedback.msg"
 )
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

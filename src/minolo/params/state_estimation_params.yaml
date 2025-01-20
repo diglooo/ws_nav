@@ -5,7 +5,8 @@ ekf_filter_node:
 # computation until it receives at least one message from one of theinputs. It will then run continuously at the
 # frequency specified here, regardless of whether it receives more measurements. Defaults to 30 if unspecified.
         frequency: 30.0
-
+        debug_mode: true
+        debug_out_file: /home/ws_nav/log_state_estimation/file.txt
 # ekf_localization_node and ukf_localization_node both use a 3D omnidirectional motion model. If this parameter is
 # set to true, no 3D information will be used in your state estimate. Use this if you are operating in a planar
 # environment and want to ignore the effect of small variations in the ground plane that might otherwise be detected
@@ -29,7 +30,7 @@ ekf_filter_node:
 #         from robot_localization! However, that instance should *not* fuse the global data.
         map_frame: map              # Defaults to "map" if unspecified
         odom_frame: odom            # Defaults to "odom" if unspecified
-        base_link_frame: base_link  # Defaults to "base_link" ifunspecified
+        base_link_frame: base_footprint  # Defaults to "base_link" ifunspecified
         world_frame: odom           # Defaults to the value ofodom_frame if unspecified
 
         odom0: wheel_odom

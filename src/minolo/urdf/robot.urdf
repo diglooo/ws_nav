@@ -13,6 +13,7 @@
     </visual>
   </link>
   
+
   <link name="lwheel">
     <visual>
       <geometry>
@@ -54,13 +55,14 @@
       <geometry>
         <cylinder length="0.02" radius="0.025"/>
       </geometry>
-      <origin rpy="0 0 0" xyz="0.022 0 0.015"/>
+      <origin rpy="0 0 0" xyz="0.0 0 0.0"/>
       <material name="blue">
         <color rgba="0 0 1 1"/>
       </material>
     </visual>
   </link>
-  
+
+
   <joint name="base_to_lwheel" type="fixed">
     <parent link="base_footprint"/>
     <child link="lwheel"/>

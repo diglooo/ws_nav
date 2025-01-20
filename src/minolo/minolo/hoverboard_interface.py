@@ -7,7 +7,7 @@ from sensor_msgs.msg import BatteryState
 START_SYMBOL = 0xABCD
 import struct
 import math
-from diff_motor_msgs.msg import MotorState
+from diff_motor_msgs.msg import MotorFeedback,MotorCommand
 class hoverboard_node(Node):
 
     def __init__(self):
@@ -39,43 +39,40 @@ class hoverboard_node(Node):
         self.battery_volt = 0
         self.timeout_vel = self.create_timer(self.timeout_seconds, self._clear_vel)
         ##ROS STYLE
-        self.feedback_publisher = self.create_publisher(MotorState,'/motor_feedback',10)
+        self.feedback_publisher = self.create_publisher(MotorFeedback,'/motor_feedback',10)
         self.command_subscribtion = self.create_subscription(
-            MotorState,
+            MotorCommand,
             '/motor_command',
             self.update_rpms,
             10)
         self.battery_status_publisher = self.create_publisher(BatteryState,'/battery_state',10)
         self.battery_timer = self.create_timer(10,self.publish_battery_status)
         self.get_logger().info('Initialized Successfully')
+
     def publish_battery_status(self):
-        
-        
-        msg = BatteryState()
-        
+        msg = BatteryState()      
         msg.voltage =float(self.battery_volt)
-        
         self.battery_status_publisher.publish(msg)
         
-    def _read_data(self):
+    def _read_data(self):      
+        dev_data = struct.unpack('<Hhhhhhhhhhh',self.ser_port.read(22))
+        #print(dev_data)
+        msg_state = MotorFeedback()
+        msg_state.left_ticks = dev_data[5]
+        msg_state.right_ticks = dev_data[6]
         
-        dev_data = struct.unpack('<Hhhhhhhhh',self.ser_port.read(18))
-        msg_state = MotorState()
-        msg_state.left_rpm = self.cmd_speed_l
-        msg_state.right_rpm = self.cmd_speed_r
+        self.battery_volt = dev_data[7]
         self.feedback_publisher.publish(msg_state)
-        self.battery_volt = dev_data[5]
         #self.cur_speed_r = dev_data[3]
         #self.cur_speed_l = dev_data[4]
     
     def get_battery_volt(self):
         return self.battery_volt
+    
     def get_curr_speed_r_l(self):
         return self.cmd_speed_r,self.cmd_speed_l
-    
    
     def _construct_string_message(self):  
-          
         checksum = (np.int16)(self.cmd_speed_r ^ self.cmd_speed_l ^ START_SYMBOL)
         return struct.pack('<Hhhh', START_SYMBOL, self.cmd_speed_l, self.cmd_speed_r, checksum)
     

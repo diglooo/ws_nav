@@ -7,7 +7,7 @@ from geometry_msgs.msg import TransformStamped
 import math
 import tf_transformations
 from nav_msgs.msg import Odometry
-from diff_motor_msgs.msg import MotorState
+from diff_motor_msgs.msg import MotorFeedback,MotorCommand
 
 class diff_motor_controller(Node):
 
@@ -30,7 +30,7 @@ class diff_motor_controller(Node):
             self.relay_vel,
             10)
         
-        self.command_publisher = self.create_publisher(MotorState,'/motor_command',10)
+        self.command_publisher = self.create_publisher(MotorCommand,'/motor_command',10)
 
         self.last_time = self.get_clock().now()
 
@@ -39,7 +39,7 @@ class diff_motor_controller(Node):
         self.y = 0
 
         #self.odometry_timer = self.create_timer(0.01,self.update_odometry)
-        self.odometry_subscriber = self.create_subscription(MotorState,'/motor_feedback',self.update_odometry,10)
+        self.odometry_subscriber = self.create_subscription(MotorFeedback,'/motor_feedback',self.update_odometry,10)
         self.declare_parameter('frame_id', 'odom')
         self.declare_parameter('child_frame_id', 'base_footprint')
         self.tf_broadcaster = TransformBroadcaster(self)
@@ -58,7 +58,7 @@ class diff_motor_controller(Node):
     def relay_vel(self, msg):
 
         vel_right,vel_left = self.get_diff_vel(msg.linear,msg.angular)
-        msg_cmd = MotorState()
+        msg_cmd = MotorCommand()
         msg_cmd.left_rpm = (int)(vel_left)
         msg_cmd.right_rpm = (int)(vel_right)
         self.command_publisher.publish(msg_cmd)
@@ -68,8 +68,9 @@ class diff_motor_controller(Node):
 
         #motor speed in RPM
         
-        rspd_rpm,lspd_rpm = feedback_msg.right_rpm,feedback_msg.left_rpm #self.hoverboard.get_curr_speed_r_l()
-
+        rspd_rpm,lspd_rpm = feedback_msg.right_ticks,feedback_msg.left_ticks #self.hoverboard.get_curr_speed_r_l()
+        
+        print(rspd_rpm,lspd_rpm)
         #we need velocities in m/s
         rspd = (rspd_rpm * self.wheel_circumference) / 60
         lspd = (lspd_rpm * self.wheel_circumference) / 60

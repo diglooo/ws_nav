@@ -60,6 +60,7 @@ def generate_launch_description():
         name='minolo_motor_interface',
         output='screen',
         parameters=[os.path.join(robot_params_dir, 'motor_interface_params.yaml')])
+    
     lidar_odometry=Node(
         package='rf2o_laser_odometry',
         executable='rf2o_laser_odometry_node',
@@ -68,8 +69,8 @@ def generate_launch_description():
         parameters=[{
                     'laser_scan_topic' : '/scan',
                     'odom_topic' : '/odom_rf2o',
-                    'publish_tf' : False,
-                    'base_frame_id' : 'base_link',
+                    'publish_tf' : True,
+                    'base_frame_id' : 'base_footprint',
                     'odom_frame_id' : 'odom',
                     'init_pose_from_topic' : '',
                     'freq' : 5.0}],)
@@ -91,10 +92,10 @@ def generate_launch_description():
     return LaunchDescription([
         motor_control_node,
         motor_interface_node,
-        lidar_node,
-        robot_state_publisher_node,
+        #lidar_node,
+        #robot_state_publisher_node,
         #launch_nav2,
-        launch_slam,
-        lidar_odometry,
-        localization_node
+        #launch_slam,
+        #lidar_odometry,
+        #localization_node
    ])
