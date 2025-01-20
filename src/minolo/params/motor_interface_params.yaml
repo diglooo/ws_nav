@@ -1,7 +1,7 @@
 minolo_motor_interface:
   ros__parameters:
-    serial_port: /dev/ttyUSB1
+    serial_port: /dev/ttyUSB0
     baude_rate: 115200
-    read_frequency: 100
-    write_frequency: 100
-    timeout_seconds: 0.02
+    read_frequency: 10
+    write_frequency: 10
+    timeout_seconds: 0.2

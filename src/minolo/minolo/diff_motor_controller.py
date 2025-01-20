@@ -16,11 +16,14 @@ class diff_motor_controller(Node):
         self.get_logger().info('Motor Controller started')
         self.declare_parameter('wheel_diameter',0.0)
         self.declare_parameter('wheels_base',0.0)
+        self.declare_parameter('round_ticks',90)  
+        
         self.declare_parameter('publish_tf',False)
         
         self.wheel_diameter = self.get_parameter('wheel_diameter').get_parameter_value().double_value
         self.get_logger().info('.%4f'%self.wheel_diameter)
         self.wheels_base = self.get_parameter('wheels_base').get_parameter_value().double_value        
+        self.round_ticks = self.get_parameter('round_ticks').get_parameter_value().integer_value   
         self.get_logger().info('.%4f'%self.wheels_base)
         self.wheel_circumference = np.pi*self.wheel_diameter
         self.publish_tf = self.get_parameter('publish_tf').get_parameter_value().bool_value
@@ -31,13 +34,12 @@ class diff_motor_controller(Node):
             10)
         
         self.command_publisher = self.create_publisher(MotorCommand,'/motor_command',10)
-
         self.last_time = self.get_clock().now()
-
         self.theta = 0
         self.x = 0
         self.y = 0
-
+        self.cur_ticks_right= -1
+        self.cur_ticks_left = -1
         #self.odometry_timer = self.create_timer(0.01,self.update_odometry)
         self.odometry_subscriber = self.create_subscription(MotorFeedback,'/motor_feedback',self.update_odometry,10)
         self.declare_parameter('frame_id', 'odom')
@@ -65,38 +67,23 @@ class diff_motor_controller(Node):
         #self.hoverboard.update_vels(vel_right,vel_left)
 
     def update_odometry(self,feedback_msg):
-
-        #motor speed in RPM
-        
-        rspd_rpm,lspd_rpm = feedback_msg.right_ticks,feedback_msg.left_ticks #self.hoverboard.get_curr_speed_r_l()
-        
-        print(rspd_rpm,lspd_rpm)
-        #we need velocities in m/s
-        rspd = (rspd_rpm * self.wheel_circumference) / 60
-        lspd = (lspd_rpm * self.wheel_circumference) / 60
-
+ 
+        r_ticks,l_ticks = feedback_msg.right_ticks_delta,feedback_msg.left_ticks_delta #self.hoverboard.get_curr_speed_r_l()
+        r_dist = (self.wheel_circumference * r_ticks)/self.round_ticks
+        l_dist = (self.wheel_circumference * l_ticks)/self.round_ticks
+        #print(r_dist,l_dist)
+        dist_linear = (r_dist+l_dist)/2
+        dist_rotational = (r_dist-l_dist)/self.wheels_base
         #we need velocities in m/s and rad/s
-        self.actual_vel_t = (rspd + lspd) / 2
-        self.actual_vel_r = (rspd - lspd) / self.wheels_base
-
-        current_time = self.get_clock().now()
         
-        delta_time = (current_time - self.last_time).nanoseconds * 1e-9
-        self.last_time = current_time
-
-        delta_theta = self.actual_vel_r * delta_time
-        self.theta += delta_theta
-    
-        delta_x = self.actual_vel_t * delta_time * math.cos(self.theta)
-        delta_y = self.actual_vel_t * delta_time * math.sin(self.theta)
   
-        
         # Update pose
-        self.x += delta_x
-        self.y += delta_y
+        self.x += dist_linear * math.cos((dist_rotational/2) + self.theta)
+        self.y += dist_linear * math.sin((dist_rotational/2) + self.theta)
+        self.theta += dist_rotational
 
         # Normalize theta to [-pi, pi]
-        self.theta = (self.theta + math.pi) % (2 * math.pi) - math.pi
+        
 
         # Publish the transform
         self.publish_transform()
@@ -145,9 +132,9 @@ class diff_motor_controller(Node):
         odom_msg.pose.pose.orientation = quat
         #set the velocity
         odom_msg.child_frame_id = self.child_frame_id
-        odom_msg.twist.twist.linear.x = self.actual_vel_t  
-        odom_msg.twist.twist.linear.y = 0.0
-        odom_msg.twist.twist.angular.z = self.actual_vel_r
+        #odom_msg.twist.twist.linear.x = self.actual_vel_t  
+        #odom_msg.twist.twist.linear.y = 0.0
+        #odom_msg.twist.twist.angular.z = self.actual_vel_r
         self.odom_publisher.publish(odom_msg)
 
 def main(args=None):

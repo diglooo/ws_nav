@@ -1,2 +1,4 @@
-int32 left_ticks
-int32 right_ticks
+int32 left_ticks_delta
+int32 right_ticks_delta
+int32 left_ticks_act
+int32 right_ticks_act
