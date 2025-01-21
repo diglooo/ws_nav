@@ -28,6 +28,7 @@ def generate_launch_description():
     launch_slam = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([os.path.join(get_package_share_directory('slam_toolbox'), 'launch'), '/online_async_launch.py']),
         launch_arguments={'slam_params_file': os.path.join(robot_params_dir, "slam_params.yaml")}.items(),
+        
         )
 
     lidar_node = LifecycleNode(package='ydlidar_ros2_driver',
@@ -44,11 +45,16 @@ def generate_launch_description():
         output='screen',
         parameters=[{'robot_description': robot_description}])
     
-    # motor_control_mode=Node(
-    #     package='minolo',
-    #     executable='minolo_bringup',
-    #     name='minolo_motor_interface',
-    #     output='screen')
+    radio_teleop_receiver = Node(
+         package='teleop_receiver',
+         executable='receiver',
+         name='radio_teleop_receiver',
+         output='screen',
+         parameters=[{
+                    'serial_port' : '/dev/serial/by-id/usb-Silicon_Labs_CP2102N_USB_to_UART_Bridge_Controller_709a94ae5324ed11926c94e8f9a97352-if00-port0',
+                    'baudrate' : 115200,
+                    'velocity_topic' : '/cmd_vel',
+                    }])
 
     motor_control_node=Node(
         package='minolo',
@@ -73,7 +79,7 @@ def generate_launch_description():
         parameters=[{
                     'laser_scan_topic' : '/scan',
                     'odom_topic' : '/odom_rf2o',
-                    'publish_tf' : True,
+                    'publish_tf' : False,
                     'base_frame_id' : 'base_footprint',
                     'odom_frame_id' : 'odom',
                     'init_pose_from_topic' : '',
@@ -98,9 +104,10 @@ def generate_launch_description():
         motor_control_node,
         motor_interface_node,
         robot_state_publisher_node,
+        radio_teleop_receiver,
         lidar_node,
         launch_nav2,
         launch_slam,
-        #lidar_odometry,
+        lidar_odometry,
         #localization_node
    ])

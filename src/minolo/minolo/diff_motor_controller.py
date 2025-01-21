@@ -14,11 +14,11 @@ class diff_motor_controller(Node):
     def __init__(self):
         super().__init__('minolo_motor_controller')
         self.get_logger().info('Motor Controller started')
-        self.declare_parameter('wheel_diameter',0.0)
-        self.declare_parameter('wheels_base',0.0)
+        self.declare_parameter('wheel_diameter',0.17)
+        self.declare_parameter('wheels_base',0.037)
         self.declare_parameter('round_ticks',90)  
         
-        self.declare_parameter('publish_tf',False)
+        self.declare_parameter('publish_tf',True)
         
         self.wheel_diameter = self.get_parameter('wheel_diameter').get_parameter_value().double_value
         self.get_logger().info('.%4f'%self.wheel_diameter)
@@ -47,7 +47,7 @@ class diff_motor_controller(Node):
         self.tf_broadcaster = TransformBroadcaster(self)
         self.frame_id = self.get_parameter('frame_id').value
         self.child_frame_id = self.get_parameter('child_frame_id').value
-        self.odom_publisher = self.create_publisher(Odometry,'/wheel_odom',10)
+        self.odom_publisher = self.create_publisher(Odometry,'/odom',10)
 
     def get_diff_vel(self,t,r):  
         rSpd = (np.int16)(((t.x + (r.z * self.wheels_base * 0.5))) / self.wheel_circumference *60)
@@ -63,6 +63,7 @@ class diff_motor_controller(Node):
         msg_cmd = MotorCommand()
         msg_cmd.left_rpm = (int)(vel_left)
         msg_cmd.right_rpm = (int)(vel_right)
+        #print(msg_cmd)
         self.command_publisher.publish(msg_cmd)
         #self.hoverboard.update_vels(vel_right,vel_left)
 
@@ -86,11 +87,11 @@ class diff_motor_controller(Node):
         
 
         # Publish the transform
-        self.publish_transform()
+        #self.publish_transform()
 
     def publish_transform(self):
         q = tf_transformations.quaternion_from_euler(0, 0, self.theta)
-        if(self.publish_tf):
+        if(False):
             """Broadcast the transform from odom to base_link."""
             t = TransformStamped()
 
