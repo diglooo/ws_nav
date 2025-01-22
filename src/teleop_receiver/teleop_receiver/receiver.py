@@ -48,8 +48,8 @@ class TeleopReceiver(Node):
                         parsed_data = self._parse_serial_data(serial_data)
                        
                         if parsed_data:
-                            x_vel = -(parsed_data[2] / 2500)*0.5;
-                            rz_vel = -(parsed_data[1] / 2500)*1.0;
+                            x_vel = -(parsed_data[2] / 2500)*0.3;
+                            rz_vel = -(parsed_data[1] / 2500)*0.8;
                             self.cmd_vel_msg.linear.x = x_vel  
                             self.cmd_vel_msg.angular.z = rz_vel 
                             self.cmd_vel_publisher.publish(self.cmd_vel_msg)

@@ -43,7 +43,9 @@ def generate_launch_description():
         package='robot_state_publisher',
         executable='robot_state_publisher',
         output='screen',
-        parameters=[{'robot_description': robot_description}])
+        parameters=[{
+            'robot_description': robot_description,
+            'rate': 20, }])
     
     radio_teleop_receiver = Node(
          package='teleop_receiver',
@@ -83,7 +85,7 @@ def generate_launch_description():
                     'base_frame_id' : 'base_footprint',
                     'odom_frame_id' : 'odom',
                     'init_pose_from_topic' : '',
-                    'freq' : 5.0}],)
+                    'freq' : 30.0}],)
     
     localization_node=Node(
         package='robot_localization',
@@ -108,6 +110,6 @@ def generate_launch_description():
         lidar_node,
         launch_nav2,
         launch_slam,
-        lidar_odometry,
+        #lidar_odometry,
         #localization_node
    ])
