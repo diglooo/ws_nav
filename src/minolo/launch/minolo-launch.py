@@ -56,6 +56,7 @@ def generate_launch_description():
                     'serial_port' : '/dev/serial/by-id/usb-Silicon_Labs_CP2102N_USB_to_UART_Bridge_Controller_709a94ae5324ed11926c94e8f9a97352-if00-port0',
                     'baudrate' : 115200,
                     'velocity_topic' : '/cmd_vel',
+                    
                     }])
 
     motor_control_node=Node(
@@ -95,6 +96,16 @@ def generate_launch_description():
         parameters=[os.path.join(robot_params_dir, 'state_estimation_params.yaml')],       
     )
 
+    topic_mux = Node(
+        package='twist_mux',
+        executable="twist_mux",
+        name="twist_mux",
+        parameters=[os.path.join(robot_params_dir,'twist_mux.yaml')],
+        remappings={
+
+                ('/cmd_vel_out', '/cmd_vel_muxed'),
+        },
+        output='screen',)
     rviz_node=Node(
         package='rviz2',
         executable='rviz2',
@@ -110,6 +121,7 @@ def generate_launch_description():
         lidar_node,
         launch_nav2,
         launch_slam,
+        #topic_mux,
         #lidar_odometry,
         #localization_node
    ])

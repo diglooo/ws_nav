@@ -10,7 +10,7 @@ class TeleopReceiver(Node):
         super().__init__('teleop_receiver')
         self.declare_parameter('serial_port','')
         self.declare_parameter('baudrate',115200)
-        self.declare_parameter('velocity_topic','/cmd_vel')
+        self.declare_parameter('velocity_topic','/cmd_vel_joy')
         
         self.serial_port_name = self.get_parameter('serial_port').get_parameter_value().string_value
         self.baudrate = self.get_parameter('baudrate').get_parameter_value().integer_value
@@ -31,7 +31,7 @@ class TeleopReceiver(Node):
                 value1 = int(parts[1])
                 value2 = int(parts[2])
                 return [command, value1, value2]
-            else:
+            else:   
                 raise ValueError("Invalid data format")
         except Exception as e:
             return None
@@ -48,8 +48,8 @@ class TeleopReceiver(Node):
                         parsed_data = self._parse_serial_data(serial_data)
                        
                         if parsed_data:
-                            x_vel = -(parsed_data[2] / 2500)*0.3;
-                            rz_vel = -(parsed_data[1] / 2500)*0.8;
+                            x_vel = -(parsed_data[2] / 5000)*1.0;
+                            rz_vel = -(parsed_data[1] / 1500)*1.0;
                             self.cmd_vel_msg.linear.x = x_vel  
                             self.cmd_vel_msg.angular.z = rz_vel 
                             self.cmd_vel_publisher.publish(self.cmd_vel_msg)

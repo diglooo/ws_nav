@@ -87,8 +87,7 @@ class hoverboard_node(Node):
                         loop_rate.sleep()  
             except Exception as e:
                 self.get_logger().error(e)
-                return None
-            time.sleep(0.01)
+                time.sleep(0.5)
 
     def publish_battery_status(self):
         msg = BatteryState()      
