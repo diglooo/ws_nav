@@ -24,7 +24,11 @@ def generate_launch_description():
         PythonLaunchDescriptionSource([os.path.join(get_package_share_directory('nav2_bringup'), 'launch'), '/navigation_launch.py']),
             launch_arguments={'params_file': os.path.join(robot_params_dir, "nav2_params.yaml")}.items(),
             )
-    
+    launch_amcl=IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([os.path.join(get_package_share_directory('nav2_bringup'), 'launch'), '/localization_launch.py']),
+            launch_arguments={'params_file': os.path.join(robot_params_dir, "nav2_params.yaml"),'map':'/home/diglo/amcl_map.yaml'}.items(),
+            )
+
     launch_slam = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([os.path.join(get_package_share_directory('slam_toolbox'), 'launch'), '/online_async_launch.py']),
         launch_arguments={'slam_params_file': os.path.join(robot_params_dir, "slam_params.yaml")}.items(),
@@ -112,7 +116,7 @@ def generate_launch_description():
         name='rviz2',
         arguments=['-d', rviz_config_dir],
         output='screen')
-
+    
     return LaunchDescription([
         motor_control_node,
         motor_interface_node,
@@ -120,7 +124,8 @@ def generate_launch_description():
         radio_teleop_receiver,
         lidar_node,
         launch_nav2,
-        launch_slam,
+        launch_amcl,
+        #launch_slam,
         #topic_mux,
         #lidar_odometry,
         #localization_node
