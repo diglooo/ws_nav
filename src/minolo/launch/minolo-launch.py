@@ -60,7 +60,19 @@ def generate_launch_description():
                     'serial_port' : '/dev/serial/by-id/usb-Silicon_Labs_CP2102N_USB_to_UART_Bridge_Controller_709a94ae5324ed11926c94e8f9a97352-if00-port0',
                     'baudrate' : 115200,
                     'velocity_topic' : '/cmd_vel',
-                    
+                    }])
+
+    imu_receiver = Node(
+         package='imu_receiver',
+         executable='receiver',
+         name='imu_receiver',
+         output='screen',
+         parameters=[{
+                    'serial_port' : '/dev/ttyACM0',
+                    'baudrate' : 115200,
+                    'output_topic' : '/imu_data',
+                    'accel_sensitivity': 2.0,
+                    'gyro_sensitivity':500.0
                     }])
 
     motor_control_node=Node(
@@ -85,7 +97,7 @@ def generate_launch_description():
         output='screen',
         parameters=[{
                     'laser_scan_topic' : '/scan',
-                    'odom_topic' : '/odom_rf2o',
+                    'odom_topic' : '/odom_lidar',
                     'publish_tf' : False,
                     'base_frame_id' : 'base_footprint',
                     'odom_frame_id' : 'odom',
@@ -106,10 +118,12 @@ def generate_launch_description():
         name="twist_mux",
         parameters=[os.path.join(robot_params_dir,'twist_mux.yaml')],
         remappings={
+            
 
                 ('/cmd_vel_out', '/cmd_vel_muxed'),
         },
         output='screen',)
+    
     rviz_node=Node(
         package='rviz2',
         executable='rviz2',
@@ -122,10 +136,11 @@ def generate_launch_description():
         motor_interface_node,
         robot_state_publisher_node,
         radio_teleop_receiver,
+        imu_receiver,
         lidar_node,
         launch_nav2,
-        launch_amcl,
-        #launch_slam,
+        #launch_amcl,
+        launch_slam,
         #topic_mux,
         #lidar_odometry,
         #localization_node

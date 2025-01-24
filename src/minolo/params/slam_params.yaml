@@ -12,9 +12,9 @@ slam_toolbox:
     map_frame: map
     base_frame: base_footprint
     scan_topic: scan
-    mode: localization #localization
-    map_file_name: /home/diglo/lab_ext_serial
-    map_start_at_dock: true
+    mode: mapping #localization
+    #map_file_name: /home/diglo/lab_ext_serial
+    #map_start_at_dock: true
     debug_logging: false
     throttle_scans: 1
     transform_publish_period: 0.5 #if 0 never publishes odometry

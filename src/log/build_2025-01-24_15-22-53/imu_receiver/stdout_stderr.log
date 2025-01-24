@@ -1,0 +1,30 @@
+running egg_info
+creating ../build/imu_receiver/imu_receiver.egg-info
+writing ../build/imu_receiver/imu_receiver.egg-info/PKG-INFO
+writing dependency_links to ../build/imu_receiver/imu_receiver.egg-info/dependency_links.txt
+writing entry points to ../build/imu_receiver/imu_receiver.egg-info/entry_points.txt
+writing requirements to ../build/imu_receiver/imu_receiver.egg-info/requires.txt
+writing top-level names to ../build/imu_receiver/imu_receiver.egg-info/top_level.txt
+writing manifest file '../build/imu_receiver/imu_receiver.egg-info/SOURCES.txt'
+reading manifest file '../build/imu_receiver/imu_receiver.egg-info/SOURCES.txt'
+adding license file 'LICENSE'
+writing manifest file '../build/imu_receiver/imu_receiver.egg-info/SOURCES.txt'
+running build
+running build_py
+creating /home/diglo/ws_nav/src/build/imu_receiver/build
+creating /home/diglo/ws_nav/src/build/imu_receiver/build/lib
+creating /home/diglo/ws_nav/src/build/imu_receiver/build/lib/imu_receiver
+copying imu_receiver/receiver.py -> /home/diglo/ws_nav/src/build/imu_receiver/build/lib/imu_receiver
+copying imu_receiver/__init__.py -> /home/diglo/ws_nav/src/build/imu_receiver/build/lib/imu_receiver
+running install
+running install_lib
+creating /home/diglo/ws_nav/src/install/imu_receiver/lib/python3.10/site-packages/imu_receiver
+copying /home/diglo/ws_nav/src/build/imu_receiver/build/lib/imu_receiver/receiver.py -> /home/diglo/ws_nav/src/install/imu_receiver/lib/python3.10/site-packages/imu_receiver
+copying /home/diglo/ws_nav/src/build/imu_receiver/build/lib/imu_receiver/__init__.py -> /home/diglo/ws_nav/src/install/imu_receiver/lib/python3.10/site-packages/imu_receiver
+byte-compiling /home/diglo/ws_nav/src/install/imu_receiver/lib/python3.10/site-packages/imu_receiver/receiver.py to receiver.cpython-310.pyc
+byte-compiling /home/diglo/ws_nav/src/install/imu_receiver/lib/python3.10/site-packages/imu_receiver/__init__.py to __init__.cpython-310.pyc
+running install_data
+creating /home/diglo/ws_nav/src/install/imu_receiver/share/ament_index
+error: can't copy 'resource/imu_receiver': doesn't exist or not a regular file
+creating /home/diglo/ws_nav/src/install/imu_receiver/share/ament_index/resource_index
+creating /home/diglo/ws_nav/src/install/imu_receiver/share/ament_index/resource_index/packages

@@ -1,0 +1,3 @@
+[console_scripts]
+receiver = imu_receiver.receiver:main
+

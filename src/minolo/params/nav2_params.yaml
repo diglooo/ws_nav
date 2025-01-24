@@ -121,15 +121,15 @@ controller_server:
       stateful: True
       plugin: "nav2_controller::SimpleGoalChecker"
       xy_goal_tolerance: 0.25
-      yaw_goal_tolerance: 0.25
+      yaw_goal_tolerance: 0.1
 
     # DWB parameters
     FollowPath:
       plugin: "dwb_core::DWBLocalPlanner"
       debug_trajectory_details: True
-      min_vel_x: 0.0
+      min_vel_x: -0.4
       min_vel_y: 0.0
-      max_vel_x: 0.2
+      max_vel_x: 0.4
       max_vel_y: 0.0
       max_vel_theta: 0.7
       min_speed_xy: 0.0

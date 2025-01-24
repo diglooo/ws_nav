@@ -20,6 +20,7 @@ class diff_motor_controller(Node):
         self.declare_parameter('frame_id', 'odom')
         self.declare_parameter('child_frame_id', 'base_footprint')      
         self.declare_parameter('publish_tf',True)
+        self.declare_parameter('odom_topic','/odom')
         
         self.frame_id = self.get_parameter('frame_id').value
         self.child_frame_id = self.get_parameter('child_frame_id').value 
@@ -28,12 +29,13 @@ class diff_motor_controller(Node):
         self.get_logger().info('.%4f'%self.wheel_diameter)
         self.wheels_base = self.get_parameter('wheels_base').get_parameter_value().double_value        
         self.round_ticks = self.get_parameter('round_ticks').get_parameter_value().integer_value   
+        self.odom_topic = self.get_parameter('odom_topic').get_parameter_value().string_value
         self.get_logger().info('.%4f'%self.wheels_base)
         self.wheel_circumference = np.pi*self.wheel_diameter
         self.publish_tf = self.get_parameter('publish_tf').get_parameter_value().bool_value
         
         self.command_publisher = self.create_publisher(MotorCommand,'/motor_command',5)
-        self.odom_publisher = self.create_publisher(Odometry,'/odom',5)
+        self.odom_publisher = self.create_publisher(Odometry,self.odom_topic,5)
 
         self.transform_subscriber = self.create_subscription(Twist,'cmd_vel', self.relay_vel, 5)
         self.odometry_subscriber = self.create_subscription(MotorFeedback,'/motor_feedback',self.update_odometry,5)
@@ -45,14 +47,12 @@ class diff_motor_controller(Node):
         self.y = 0
         self.cur_ticks_right= -1
         self.cur_ticks_left = -1
-        #self.odometry_timer = self.create_timer(0.01,self.update_odometry)     
-
 
     def get_diff_vel(self,t,r):  
         rSpd = (np.int16)(((t.x + (r.z * self.wheels_base * 0.5))) / self.wheel_circumference *60)
         lSpd = (np.int16)(((t.x - (r.z * self.wheels_base * 0.5))) / self.wheel_circumference *60)
-        rSpd = np.clip(rSpd,-30,30)
-        lSpd = np.clip(lSpd,-30,30)        
+        #rSpd = np.clip(rSpd,-30,30)
+        #lSpd = np.clip(lSpd,-30,30)        
         return rSpd,lSpd 
 
     def relay_vel(self, msg):
@@ -88,6 +88,7 @@ class diff_motor_controller(Node):
         q = tf_transformations.quaternion_from_euler(0, 0, self.theta)
         q_delta = tf_transformations.quaternion_from_euler(0, 0, self.delta_rotational)
 
+        
         """Broadcast the transform from odom to base_link."""
         t = TransformStamped()
         # Fill in the header
@@ -105,6 +106,7 @@ class diff_motor_controller(Node):
         t.transform.rotation.y = q[1]
         t.transform.rotation.z = q[2]
         t.transform.rotation.w = q[3]
+        
 
         # Broadcast the transform
         """Broadcast Odometry message to /odom topic"""
@@ -125,7 +127,9 @@ class diff_motor_controller(Node):
         odom_msg.header.stamp = self.get_clock().now().to_msg()
         t.header.stamp = self.get_clock().now().to_msg()
         self.odom_publisher.publish(odom_msg)
-        self.tf_broadcaster.sendTransform(t)
+        if(self.publish_tf):
+            self.tf_broadcaster.sendTransform(t)
+        
 
 def main(args=None):
     rclpy.init(args=args)

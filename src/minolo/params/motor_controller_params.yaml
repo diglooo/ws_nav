@@ -3,6 +3,7 @@ minolo_motor_controller:
     wheel_diameter: 0.17
     wheels_base: 0.37
     round_ticks: 90
-    publish_tf: true
+    publish_tf: True
     frame_id: odom
+    odom_topic: '/odom'
     child_frame_id: base_footprint

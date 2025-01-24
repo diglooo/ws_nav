@@ -55,39 +55,39 @@ class hoverboard_node(Node):
 
         serial_recv_thread = threading.Thread(target=self.serial_recv, daemon=True)
         serial_recv_thread.start()
+        #self.serial_recv()
+        
         
     def serial_recv(self):
         loop_rate = self.create_rate(self.serial_read_rate)
-        while True:
-            try:
-                # Open the serial port
-                with serial.Serial(port = self.serial_port_name, baudrate = self.baudrate, timeout=0.5) as ser:   
-                    self.get_logger().info(f'{self.serial_port_name} port opened successfully')         
-                    while True:
-                        cmd_speed_l=self.cmd_speed_l*2
-                        cmd_speed_r=self.cmd_speed_r*2
-                        recv_unpacked_data = struct.unpack('<Hhhhhhhhhhh',ser.read(22))                  
-                        rx_checksum = (np.int16)(recv_unpacked_data[0]^recv_unpacked_data[1]^recv_unpacked_data[2]^recv_unpacked_data[3]^recv_unpacked_data[4]^recv_unpacked_data[5]^recv_unpacked_data[6]^recv_unpacked_data[7]^recv_unpacked_data[8]^recv_unpacked_data[9])
-                        msg_state = MotorFeedback()
+        try:
+            # Open the serial port
+            with serial.Serial(port = self.serial_port_name, baudrate = self.baudrate, timeout=0.5) as ser:   
+                self.get_logger().info(f'{self.serial_port_name} port opened successfully')         
+                while True:
+                    cmd_speed_l=self.cmd_speed_l*2
+                    cmd_speed_r=self.cmd_speed_r*2
+                    recv_unpacked_data = struct.unpack('<Hhhhhhhhhhh',ser.read(22))                  
+                    rx_checksum = (np.int16)(recv_unpacked_data[0]^recv_unpacked_data[1]^recv_unpacked_data[2]^recv_unpacked_data[3]^recv_unpacked_data[4]^recv_unpacked_data[5]^recv_unpacked_data[6]^recv_unpacked_data[7]^recv_unpacked_data[8]^recv_unpacked_data[9])
+                    msg_state = MotorFeedback()
 
-                        if (rx_checksum == recv_unpacked_data[10]):       
-                            msg_state = MotorFeedback()
-                            msg_state.right_ticks_delta, msg_state.left_ticks_delta = self.get_ticks_difference_r_l(recv_unpacked_data[5],recv_unpacked_data[6])
-                            msg_state.right_ticks_act, msg_state.left_ticks_act = recv_unpacked_data[5], recv_unpacked_data[6]
-                            #self.get_logger().info('%d, %d'%(dev_data[6],dev_data[5]))
-                            #print(msg_state)
-                            self.battery_volt = recv_unpacked_data[7]
-                            self.feedback_publisher.publish(msg_state)
-                        else:
-                            ser.reset_input_buffer()    
-                        
-                        tx_checksum = (np.int16)((cmd_speed_r) ^ (cmd_speed_l) ^ START_SYMBOL)
-                        serial_command = struct.pack('<Hhhh', START_SYMBOL, cmd_speed_l, cmd_speed_r, tx_checksum)
-                        ser.write(serial_command)
-                        loop_rate.sleep()  
-            except Exception as e:
-                self.get_logger().error(e)
-                time.sleep(0.5)
+                    if (rx_checksum == recv_unpacked_data[10]):       
+                        msg_state = MotorFeedback()
+                        msg_state.right_ticks_delta, msg_state.left_ticks_delta = self.get_ticks_difference_r_l(recv_unpacked_data[5],recv_unpacked_data[6])
+                        msg_state.right_ticks_act, msg_state.left_ticks_act = recv_unpacked_data[5], recv_unpacked_data[6]
+                        #self.get_logger().info('%d, %d'%(dev_data[6],dev_data[5]))
+                        #print(msg_state)
+                        self.battery_volt = recv_unpacked_data[7]
+                        self.feedback_publisher.publish(msg_state)
+                    else:
+                        ser.reset_input_buffer()    
+                    
+                    tx_checksum = (np.int16)((cmd_speed_r) ^ (cmd_speed_l) ^ START_SYMBOL)
+                    serial_command = struct.pack('<Hhhh', START_SYMBOL, cmd_speed_l, cmd_speed_r, tx_checksum)
+                    ser.write(serial_command)
+                    loop_rate.sleep()  
+        except Exception as e:
+            self.get_logger().error(e)
 
     def publish_battery_status(self):
         msg = BatteryState()      
@@ -153,21 +153,15 @@ class hoverboard_node(Node):
         self._set_vels(0,0)
         self.timeout_vel.cancel()
 
-    def _write_data(self):
-        msg_byte = self._construct_string_message()
-        self.ser_port.write(msg_byte)
-
-    def close_port(self):
-        self.ser_port.close()
 
 def main(args=None):
     rclpy.init(args=args)
 
     hover = hoverboard_node()
+    
 
     rclpy.spin(hover)
     hover.get_logger().info('closing port')
-    hover.close_port()
     hover.destroy_node()
     rclpy.shutdown()
 
