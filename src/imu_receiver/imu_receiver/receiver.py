@@ -14,13 +14,14 @@ class TeleopReceiver(Node):
         self.declare_parameter('output_topic','/imu_data')
         self.declare_parameter('accel_sensitivity',2.0)
         self.declare_parameter('gyro_sensitivity',500.0)
+        self.declare_parameter('frame_id','imu_link')
         
         self.serial_port_name = self.get_parameter('serial_port').get_parameter_value().string_value
         self.baudrate = self.get_parameter('baudrate').get_parameter_value().integer_value
         self.output_topic = self.get_parameter('output_topic').get_parameter_value().string_value
         self.accel_sensitivity = self.get_parameter('accel_sensitivity').get_parameter_value().double_value
         self.gyro_sensitivity = self.get_parameter('gyro_sensitivity').get_parameter_value().double_value
-    
+        self.frame_id = self.get_parameter('frame_id').get_parameter_value().string_value
         self.cmd_vel_publisher = self.create_publisher(Imu,self.output_topic,10)       
         serial_recv_thread = threading.Thread(target=self.serial_recv, daemon=True)
         serial_recv_thread.start()
@@ -53,13 +54,15 @@ class TeleopReceiver(Node):
                         serial_data = ser.readline().decode('utf-8')
                         parsed_data = self._parse_serial_data(serial_data)
                                                
-                        if parsed_data:                          
+                        if parsed_data:           
+                            message.header.frame_id = self.frame_id
+                            message.header.stamp = self.get_clock().now().to_msg()               
                             [ax, ay, az, gx, gy, gz] = parsed_data
-                            message.linear_acceleration.x=self._scale_ac(ax)
-                            message.linear_acceleration.y=self._scale_ac(ay)
-                            message.linear_acceleration.z=self._scale_ac(az)
+                            message.linear_acceleration.x=-self._scale_ac(ax)
+                            message.linear_acceleration.y= - self._scale_ac(ay)
+                            message.linear_acceleration.z=  self._scale_ac(az)
                             message.angular_velocity.x=self._scale_gy(gx)
-                            message.angular_velocity.y=self._scale_gy(gy)
+                            message.angular_velocity.y= - self._scale_gy(gy)
                             message.angular_velocity.z=self._scale_gy(gz)                 
                             self.cmd_vel_publisher.publish(message)
                             

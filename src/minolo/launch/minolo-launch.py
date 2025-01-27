@@ -26,7 +26,7 @@ def generate_launch_description():
             )
     launch_amcl=IncludeLaunchDescription(
         PythonLaunchDescriptionSource([os.path.join(get_package_share_directory('nav2_bringup'), 'launch'), '/localization_launch.py']),
-            launch_arguments={'params_file': os.path.join(robot_params_dir, "nav2_params.yaml"),'map':'/home/diglo/amcl_map.yaml'}.items(),
+            launch_arguments={'params_file': os.path.join(robot_params_dir, "nav2_params.yaml"),'map':'/home/diglo/map_fusion_save.yaml'}.items(),
             )
 
     launch_slam = IncludeLaunchDescription(
@@ -139,9 +139,9 @@ def generate_launch_description():
         imu_receiver,
         lidar_node,
         launch_nav2,
-        #launch_amcl,
-        launch_slam,
+        launch_amcl,
+        #launch_slam,
         #topic_mux,
         #lidar_odometry,
-        #localization_node
+        localization_node
    ])

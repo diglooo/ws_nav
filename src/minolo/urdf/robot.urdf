@@ -12,7 +12,13 @@
       </material>
     </visual>
   </link>
-  
+  <link name="imu_link">
+    <visual>
+      <geometry>
+        <box size="0.05 0.05 0.05"/>
+      </geometry>
+    </visual>
+  </link>
 
   <link name="lwheel">
     <visual>
@@ -86,5 +92,10 @@
     <child link="fwheel"/>
     <origin xyz="0.36 0.0 0.0" rpy="1.578 0 0"/>
   </joint>
-  
+
+  <joint name="imu_joint" type="fixed">
+    <parent link="base_footprint"/>
+    <child link="imu_link"/>
+    <origin xyz="0.21 -0.02 0.15" rpy="0 0 0"/>
+  </joint>
 </robot>
