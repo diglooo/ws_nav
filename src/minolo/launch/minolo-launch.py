@@ -26,7 +26,7 @@ def generate_launch_description():
             )
     launch_amcl=IncludeLaunchDescription(
         PythonLaunchDescriptionSource([os.path.join(get_package_share_directory('nav2_bringup'), 'launch'), '/localization_launch.py']),
-            launch_arguments={'params_file': os.path.join(robot_params_dir, "nav2_params.yaml"),'map':'/home/diglo/map_fusion_save.yaml'}.items(),
+            launch_arguments={'params_file': os.path.join(robot_params_dir, "nav2_params.yaml"),'map':'/home/diglo/ws_nav/map_1737995541.yaml'}.items(),
             )
 
     launch_slam = IncludeLaunchDescription(
@@ -88,7 +88,8 @@ def generate_launch_description():
         executable='motor_interface',
         name='minolo_motor_interface',
         output='screen',
-        parameters=[os.path.join(robot_params_dir, 'motor_interface_params.yaml')])
+        parameters=[
+            os.path.join(robot_params_dir, 'motor_interface_params.yaml')])
     
     lidar_odometry=Node(
         package='rf2o_laser_odometry',
@@ -96,13 +97,13 @@ def generate_launch_description():
         name='laser_odometry_node',
         output='screen',
         parameters=[{
-                    'laser_scan_topic' : '/scan',
-                    'odom_topic' : '/odom_lidar',
-                    'publish_tf' : False,
-                    'base_frame_id' : 'base_footprint',
-                    'odom_frame_id' : 'odom',
-                    'init_pose_from_topic' : '',
-                    'freq' : 30.0}],)
+            'laser_scan_topic' : '/scan',
+            'odom_topic' : '/odom_lidar',
+            'publish_tf' : False,
+            'base_frame_id' : 'base_footprint',
+            'odom_frame_id' : 'odom',
+            'init_pose_from_topic' : '',
+            'freq' : 30.0}],)
     
     localization_node=Node(
         package='robot_localization',
@@ -118,9 +119,7 @@ def generate_launch_description():
         name="twist_mux",
         parameters=[os.path.join(robot_params_dir,'twist_mux.yaml')],
         remappings={
-            
-
-                ('/cmd_vel_out', '/cmd_vel_muxed'),
+            ('/cmd_vel_out', '/cmd_vel_muxed'),
         },
         output='screen',)
     
@@ -141,7 +140,5 @@ def generate_launch_description():
         launch_nav2,
         launch_amcl,
         #launch_slam,
-        #topic_mux,
-        #lidar_odometry,
         localization_node
    ])

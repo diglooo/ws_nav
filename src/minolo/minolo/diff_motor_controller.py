@@ -41,7 +41,7 @@ class diff_motor_controller(Node):
         self.odometry_subscriber = self.create_subscription(MotorFeedback,'/motor_feedback',self.update_odometry,5)
         self.tf_broadcaster = TransformBroadcaster(self)
 
-        self.last_time = self.get_clock().now()
+        self.last_time = None
         self.theta = 0
         self.x = 0
         self.y = 0
@@ -65,12 +65,21 @@ class diff_motor_controller(Node):
         #self.hoverboard.update_vels(vel_right,vel_left)
 
     def update_odometry(self,feedback_msg):
+        if(self.last_time is None):
+            self.last_time = self.get_clock().now()
+            return
+        
+        delta_t = (self.get_clock().now()-self.last_time).nanoseconds*1e-9
+        #print(delta_t)
+        self.last_time = self.get_clock().now()
         r_ticks,l_ticks = feedback_msg.right_ticks_delta,feedback_msg.left_ticks_delta #self.hoverboard.get_curr_speed_r_l()
         r_dist = (self.wheel_circumference * r_ticks)/self.round_ticks
         l_dist = (self.wheel_circumference * l_ticks)/self.round_ticks
         #print(r_dist,l_dist)
         dist_linear = (r_dist+l_dist)/2
+        self.vel_linear = dist_linear/delta_t
         self.delta_rotational = (r_dist-l_dist)/self.wheels_base
+        self.vel_rotational = self.delta_rotational/delta_t
         #we need velocities in m/s and rad/s
           
         # Update pose
@@ -83,6 +92,7 @@ class diff_motor_controller(Node):
         # Normalize theta to [-pi, pi]
         # Publish the transform
         self.publish_transform()
+        
 
     def publish_transform(self):
         q = tf_transformations.quaternion_from_euler(0, 0, self.theta)
@@ -123,7 +133,12 @@ class diff_motor_controller(Node):
         odom_msg.pose.pose.position.y = self.y
         odom_msg.pose.pose.position.z = 0.0
         odom_msg.pose.pose.orientation = quat
-
+        odom_msg.twist.twist.linear.x = self.vel_linear
+        odom_msg.twist.twist.linear.y =0.0
+        odom_msg.twist.twist.linear.z =0.0
+        odom_msg.twist.twist.angular.x =0.0
+        odom_msg.twist.twist.angular.y =0.0
+        odom_msg.twist.twist.angular.z =self.vel_rotational
         odom_msg.header.stamp = self.get_clock().now().to_msg()
         t.header.stamp = self.get_clock().now().to_msg()
         self.odom_publisher.publish(odom_msg)
