@@ -54,9 +54,7 @@ class hoverboard_node(Node):
         self.prev_ticks_l=-1
 
         serial_recv_thread = threading.Thread(target=self.serial_recv, daemon=True)
-        serial_recv_thread.start()
-        #self.serial_recv()
-        
+        serial_recv_thread.start()  
         
     def serial_recv(self):
         loop_rate = self.create_rate(self.serial_read_rate)
@@ -67,7 +65,9 @@ class hoverboard_node(Node):
                 while True:
                     cmd_speed_l=self.cmd_speed_l*2
                     cmd_speed_r=self.cmd_speed_r*2
-                    recv_unpacked_data = struct.unpack('<Hhhhhhhhhhh',ser.read(22))                  
+                    
+                    #Read data from serial
+                    recv_unpacked_data = struct.unpack('<Hhhhhhhhhhh',ser.read(22))            
                     rx_checksum = (np.int16)(recv_unpacked_data[0]^recv_unpacked_data[1]^recv_unpacked_data[2]^recv_unpacked_data[3]^recv_unpacked_data[4]^recv_unpacked_data[5]^recv_unpacked_data[6]^recv_unpacked_data[7]^recv_unpacked_data[8]^recv_unpacked_data[9])
                     msg_state = MotorFeedback()
 
@@ -75,13 +75,11 @@ class hoverboard_node(Node):
                         msg_state = MotorFeedback()
                         msg_state.right_ticks_delta, msg_state.left_ticks_delta = self.get_ticks_difference_r_l(recv_unpacked_data[5],recv_unpacked_data[6])
                         msg_state.right_ticks_act, msg_state.left_ticks_act = recv_unpacked_data[5], recv_unpacked_data[6]
-                        #self.get_logger().info('%d, %d'%(dev_data[6],dev_data[5]))
-                        #print(msg_state)
                         self.battery_volt = recv_unpacked_data[7]
                         self.feedback_publisher.publish(msg_state)
                     else:
                         ser.reset_input_buffer()    
-                    
+                    #write data to serial   
                     tx_checksum = (np.int16)((cmd_speed_r) ^ (cmd_speed_l) ^ START_SYMBOL)
                     serial_command = struct.pack('<Hhhh', START_SYMBOL, cmd_speed_l, cmd_speed_r, tx_checksum)
                     ser.write(serial_command)
@@ -96,8 +94,7 @@ class hoverboard_node(Node):
 
     def get_ticks_difference_r_l(self,ticks_r,ticks_l):
         if(self.prev_ticks_r==-1):
-            diff_r = 0
-            
+            diff_r = 0      
         else:
             diff_r = ticks_r - self.prev_ticks_r
             if diff_r > self.ticks_ceiling:

@@ -70,39 +70,36 @@ class diff_motor_controller(Node):
             return
         
         delta_t = (self.get_clock().now()-self.last_time).nanoseconds*1e-9
-        #print(delta_t)
         self.last_time = self.get_clock().now()
+        
         r_ticks,l_ticks = feedback_msg.right_ticks_delta,feedback_msg.left_ticks_delta #self.hoverboard.get_curr_speed_r_l()
         r_dist = (self.wheel_circumference * r_ticks)/self.round_ticks
         l_dist = (self.wheel_circumference * l_ticks)/self.round_ticks
-        #print(r_dist,l_dist)
-        dist_linear = (r_dist+l_dist)/2
-        self.vel_linear = dist_linear/delta_t
-        self.delta_rotational = (r_dist-l_dist)/self.wheels_base
-        self.vel_rotational = self.delta_rotational/delta_t
-        #we need velocities in m/s and rad/s
-          
-        # Update pose
-        self.delta_x = dist_linear * math.cos((self.delta_rotational/2) + self.theta)
-        self.x += self.delta_x
-        self.delta_y = dist_linear * math.sin((self.delta_rotational/2) + self.theta)
-        self.y += self.delta_y
-        self.theta += self.delta_rotational
+        dist_delta = (r_dist+l_dist)/2
+        self.theta_delta = (r_dist-l_dist)/self.wheels_base
+   
+        #velocities im m/s and rad/s
+        self.vel_linear = dist_delta/delta_t
+        self.vel_rotational = self.theta_delta/delta_t
 
-        # Normalize theta to [-pi, pi]
+        # Update pose
+        self.delta_x = dist_delta * math.cos((self.theta_delta/2) + self.theta)
+        self.x += self.delta_x
+        self.delta_y = dist_delta * math.sin((self.theta_delta/2) + self.theta)
+        self.y += self.delta_y
+        self.theta += self.theta_delta
+
         # Publish the transform
         self.publish_transform()
         
-
     def publish_transform(self):
-        q = tf_transformations.quaternion_from_euler(0, 0, self.theta)
-        q_delta = tf_transformations.quaternion_from_euler(0, 0, self.delta_rotational)
-
-        
-        """Broadcast the transform from odom to base_link."""
+        q_sum = tf_transformations.quaternion_from_euler(0, 0, self.theta)
+        q_delta = tf_transformations.quaternion_from_euler(0, 0, self.theta_delta)
+      
+        """Prepare the transform from odom to base_link."""
         t = TransformStamped()
-        # Fill in the header
         
+        # Fill in the header       
         t.header.frame_id = self.frame_id
         t.child_frame_id = self.child_frame_id
 
@@ -112,19 +109,17 @@ class diff_motor_controller(Node):
         t.transform.translation.z = 0.0
 
         # Set rotation (convert theta to quaternion)    
-        t.transform.rotation.x = q[0]
-        t.transform.rotation.y = q[1]
-        t.transform.rotation.z = q[2]
-        t.transform.rotation.w = q[3]
+        t.transform.rotation.x = q_sum[0]
+        t.transform.rotation.y = q_sum[1]
+        t.transform.rotation.z = q_sum[2]
+        t.transform.rotation.w = q_sum[3]
         
-
-        # Broadcast the transform
-        """Broadcast Odometry message to /odom topic"""
+        """Prepare the nav_msgs/Odometry message"""
         quat = Quaternion()
-        quat.x = q[0]
-        quat.y = q[1]
-        quat.z = q[2]
-        quat.w = q[3]
+        quat.x = q_sum[0]
+        quat.y = q_sum[1]
+        quat.z = q_sum[2]
+        quat.w = q_sum[3]
         odom_msg = Odometry()
         
         odom_msg.header.frame_id = self.frame_id   
@@ -141,6 +136,7 @@ class diff_motor_controller(Node):
         odom_msg.twist.twist.angular.z =self.vel_rotational
         odom_msg.header.stamp = self.get_clock().now().to_msg()
         t.header.stamp = self.get_clock().now().to_msg()
+        
         self.odom_publisher.publish(odom_msg)
         if(self.publish_tf):
             self.tf_broadcaster.sendTransform(t)
@@ -148,13 +144,10 @@ class diff_motor_controller(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-
     motor = diff_motor_controller()
-
     rclpy.spin(motor)
     motor.destroy_node()
     rclpy.shutdown()
-
 
 if __name__ == '__main__':
     main()
