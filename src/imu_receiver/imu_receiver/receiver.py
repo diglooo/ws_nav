@@ -5,6 +5,7 @@ import serial
 import time
 import threading
 import math
+import csv
 
 class TeleopReceiver(Node):
     def __init__(self):
@@ -44,6 +45,9 @@ class TeleopReceiver(Node):
 
     def serial_recv(self):
         message = Imu()
+        #self.file = open("imu_data.csv", mode="w", newline="")
+        #csvwriter = csv.writer(self.file)
+        
         try:
             # Open the serial port
             with serial.Serial(port = self.serial_port_name, baudrate = self.baudrate, timeout=0.5) as ser:   
@@ -58,6 +62,8 @@ class TeleopReceiver(Node):
                             message.header.frame_id = self.frame_id
                             message.header.stamp = self.get_clock().now().to_msg()               
                             [ax, ay, az, gx, gy, gz] = parsed_data
+                            
+                            #csvwriter.writerow([self._scale_ac(ax), self._scale_ac(ay), self._scale_ac(az), self._scale_gy(gx), self._scale_gy(gy), self._scale_gy(gz)])
                             message.linear_acceleration.x=-self._scale_ac(ax)
                             message.linear_acceleration.y= - self._scale_ac(ay)
                             message.linear_acceleration.z=  self._scale_ac(az)
@@ -65,6 +71,7 @@ class TeleopReceiver(Node):
                             message.angular_velocity.y= - self._scale_gy(gy)
                             message.angular_velocity.z=self._scale_gy(gz)                 
                             self.cmd_vel_publisher.publish(message)
+                            
                             
                     time.sleep(0.001)                     
         except serial.SerialException as e:
@@ -83,6 +90,7 @@ def main(args=None):
     teleop_receiver.destroy_node()
     
     rclpy.shutdown()
+    #self.file.close()
 
 
 if __name__ == '__main__':

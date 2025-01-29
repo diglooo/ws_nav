@@ -17,7 +17,6 @@ class hoverboard_node(Node):
 
     def __init__(self):
         super().__init__('minolo_motor_interface')
-        self.get_logger().info('Main node started')
         self.cur_speed_r = 0
         self.cur_speed_l = 0
         self.cmd_speed_r = 0
@@ -49,7 +48,6 @@ class hoverboard_node(Node):
             10)
         self.battery_status_publisher = self.create_publisher(BatteryState,'/battery_state',20)
         self.battery_timer = self.create_timer(10,self.publish_battery_status)
-        self.get_logger().info('Initialized Successfully')
         self.prev_ticks_r=-1
         self.prev_ticks_l=-1
 
@@ -57,10 +55,10 @@ class hoverboard_node(Node):
         serial_recv_thread.start()  
         
     def serial_recv(self):
-        loop_rate = self.create_rate(self.serial_read_rate)
+        loop_rate = self.create_rate(50.0)
         try:
             # Open the serial port
-            with serial.Serial(port = self.serial_port_name, baudrate = self.baudrate, timeout=0.5) as ser:   
+            with serial.Serial(port = self.serial_port_name, baudrate = self.baudrate) as ser:   
                 self.get_logger().info(f'{self.serial_port_name} port opened successfully')         
                 while True:
                     cmd_speed_l=self.cmd_speed_l*2
@@ -79,11 +77,14 @@ class hoverboard_node(Node):
                         self.feedback_publisher.publish(msg_state)
                     else:
                         ser.reset_input_buffer()    
+                        self.get_logger().warn('Serial pkt sync loss. Buffer flushed.')
+        
                     #write data to serial   
                     tx_checksum = (np.int16)((cmd_speed_r) ^ (cmd_speed_l) ^ START_SYMBOL)
                     serial_command = struct.pack('<Hhhh', START_SYMBOL, cmd_speed_l, cmd_speed_r, tx_checksum)
                     ser.write(serial_command)
-                    loop_rate.sleep()  
+                    #loop_rate.sleep()  
+                    time.sleep(0.01)
         except Exception as e:
             self.get_logger().error(e)
 

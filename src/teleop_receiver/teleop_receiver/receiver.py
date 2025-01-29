@@ -19,8 +19,10 @@ class TeleopReceiver(Node):
         self.cmd_vel_msg = Twist()
         self.cmd_vel_publisher = self.create_publisher(Twist,self.velocity_topic,10)
         
-        serial_recv_thread = threading.Thread(target=self.serial_recv, daemon=True)
-        serial_recv_thread.start()
+        #serial_recv_thread = threading.Thread(target=self.serial_recv, daemon=True)
+        #serial_recv_thread.start()
+
+        self.serial_recv()
         
         
     def _parse_serial_data(self, serial_data):
@@ -39,7 +41,7 @@ class TeleopReceiver(Node):
     def serial_recv(self):
         try:
             # Open the serial port
-            with serial.Serial(port = self.serial_port_name, baudrate = self.baudrate, timeout=0.5) as ser:   
+            with serial.Serial(port = self.serial_port_name, baudrate = self.baudrate) as ser:   
                 self.get_logger().info(f'{self.serial_port_name} port opened successfully')         
                 while True:
                     # Read a line from the serial port

@@ -16,19 +16,19 @@ class diff_motor_controller(Node):
         self.get_logger().info('Motor Controller started')
         self.declare_parameter('wheel_diameter',0.17)
         self.declare_parameter('wheels_base',0.037)
-        self.declare_parameter('round_ticks',90)  
-        self.declare_parameter('frame_id', 'odom')
-        self.declare_parameter('child_frame_id', 'base_footprint')      
+        self.declare_parameter('encoder_ticks_per_rev',90)  
+        self.declare_parameter('fixed_frame_id', 'odom')
+        self.declare_parameter('robot_frame_id', 'base_footprint')      
         self.declare_parameter('publish_tf',True)
         self.declare_parameter('odom_topic','/odom')
         
-        self.frame_id = self.get_parameter('frame_id').value
-        self.child_frame_id = self.get_parameter('child_frame_id').value 
+        self.frame_id = self.get_parameter('fixed_frame_id').value
+        self.child_frame_id = self.get_parameter('robot_frame_id').value 
              
         self.wheel_diameter = self.get_parameter('wheel_diameter').get_parameter_value().double_value
         self.get_logger().info('.%4f'%self.wheel_diameter)
         self.wheels_base = self.get_parameter('wheels_base').get_parameter_value().double_value        
-        self.round_ticks = self.get_parameter('round_ticks').get_parameter_value().integer_value   
+        self.round_ticks = self.get_parameter('encoder_ticks_per_rev').get_parameter_value().integer_value   
         self.odom_topic = self.get_parameter('odom_topic').get_parameter_value().string_value
         self.get_logger().info('.%4f'%self.wheels_base)
         self.wheel_circumference = np.pi*self.wheel_diameter

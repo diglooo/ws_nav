@@ -2,8 +2,11 @@ minolo_motor_controller:
   ros__parameters:
     wheel_diameter: 0.17
     wheels_base: 0.37
-    round_ticks: 90
+    encoder_ticks_per_rev: 90
+    fixed_frame_id: odom
+    robot_frame_id: base_footprint
     publish_tf: False
-    frame_id: odom
     odom_topic: '/odom_wheels'
-    child_frame_id: base_footprint
+    #odom_topic: '/odom'
+    
+    
