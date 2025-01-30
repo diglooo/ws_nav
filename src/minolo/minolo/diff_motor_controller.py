@@ -23,20 +23,15 @@ class diff_motor_controller(Node):
         self.declare_parameter('odom_topic','/odom')
         
         self.frame_id = self.get_parameter('fixed_frame_id').value
-        self.child_frame_id = self.get_parameter('robot_frame_id').value 
-             
+        self.child_frame_id = self.get_parameter('robot_frame_id').value        
         self.wheel_diameter = self.get_parameter('wheel_diameter').get_parameter_value().double_value
-        self.get_logger().info('.%4f'%self.wheel_diameter)
         self.wheels_base = self.get_parameter('wheels_base').get_parameter_value().double_value        
         self.round_ticks = self.get_parameter('encoder_ticks_per_rev').get_parameter_value().integer_value   
         self.odom_topic = self.get_parameter('odom_topic').get_parameter_value().string_value
-        self.get_logger().info('.%4f'%self.wheels_base)
-        self.wheel_circumference = np.pi*self.wheel_diameter
         self.publish_tf = self.get_parameter('publish_tf').get_parameter_value().bool_value
         
         self.command_publisher = self.create_publisher(MotorCommand,'/motor_command',5)
         self.odom_publisher = self.create_publisher(Odometry,self.odom_topic,5)
-
         self.transform_subscriber = self.create_subscription(Twist,'cmd_vel', self.relay_vel, 5)
         self.odometry_subscriber = self.create_subscription(MotorFeedback,'/motor_feedback',self.update_odometry,5)
         self.tf_broadcaster = TransformBroadcaster(self)
@@ -47,6 +42,8 @@ class diff_motor_controller(Node):
         self.y = 0
         self.cur_ticks_right= -1
         self.cur_ticks_left = -1
+        self.wheel_circumference = np.pi*self.wheel_diameter
+        
 
     def get_diff_vel(self,t,r):  
         rSpd = (np.int16)(((t.x + (r.z * self.wheels_base * 0.5))) / self.wheel_circumference *60)
@@ -146,8 +143,6 @@ def main(args=None):
     rclpy.init(args=args)
     motor = diff_motor_controller()
     rclpy.spin(motor)
-    motor.destroy_node()
-    rclpy.shutdown()
 
 if __name__ == '__main__':
     main()

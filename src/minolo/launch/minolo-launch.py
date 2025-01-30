@@ -81,7 +81,8 @@ def generate_launch_description():
         name='minolo_motor_controller',
         output='screen',
         emulate_tty=True,
-        parameters=[os.path.join(robot_params_dir, 'motor_controller_params.yaml')])
+        parameters=[
+            os.path.join(robot_params_dir, 'motor_controller_params.yaml')])
     
     motor_interface_node=Node(
         package='minolo',
@@ -112,23 +113,6 @@ def generate_launch_description():
         output='screen',
         parameters=[os.path.join(robot_params_dir, 'state_estimation_params.yaml')],       
     )
-
-    topic_mux = Node(
-        package='twist_mux',
-        executable="twist_mux",
-        name="twist_mux",
-        parameters=[os.path.join(robot_params_dir,'twist_mux.yaml')],
-        remappings={
-            ('/cmd_vel_out', '/cmd_vel_muxed'),
-        },
-        output='screen',)
-    
-    rviz_node=Node(
-        package='rviz2',
-        executable='rviz2',
-        name='rviz2',
-        arguments=['-d', rviz_config_dir],
-        output='screen')
     
     return LaunchDescription([
         motor_control_node,
@@ -137,8 +121,8 @@ def generate_launch_description():
         radio_teleop_receiver,
         imu_receiver,
         lidar_node,
-        launch_nav2,
-        launch_amcl,
-        #launch_slam,
+        #launch_nav2,
+        #launch_amcl,
+        launch_slam,
         localization_node
    ])
