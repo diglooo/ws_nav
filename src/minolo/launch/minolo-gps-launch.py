@@ -118,6 +118,17 @@ def generate_launch_description():
             ("odometry/filtered", "odometry/global"),
         ],
     )
+
+    global_localization=Node(
+        package="robot_localization",
+        executable="ekf_node",
+        name="ekf_filter_node_map",
+        output="screen",
+        parameters=[rl_params_file],
+        remappings=[
+            ("odometry/filtered", "odometry/global"),
+        ],
+    )
     
     gps_node=Node(
         package='um982_driver',
@@ -134,13 +145,34 @@ def generate_launch_description():
             'password': "cogo-2023",
         }])
     
+    swri_transform_util=Node(
+        package="swri_transform_util",
+        executable="initialize_origin.py",
+        name="initialize_origin",
+        remappings=[
+            ("fix", "gps/fix"),
+        ])
+
+    swri_transform=Node(
+        package="tf2_ros",
+        executable="static_transform_publisher",
+        name="swri_transform",
+        arguments=["0", "0", "0", "0", "0", "0", "map", "origin"]
+    )
+
+    map_odom_transform=Node(
+        package="tf2_ros",
+        executable="static_transform_publisher",
+        name="swri_transform",
+        arguments=["0", "0", "0", "0", "0", "0", "map", "odom"]
+    )
     
     return LaunchDescription([
-        #motor_control_node,
-        #motor_interface_node,
+        motor_control_node,
+        motor_interface_node,
         robot_state_publisher_node,
-        #radio_teleop_receiver,
-        #imu_receiver,
+        radio_teleop_receiver,
+        imu_receiver,
         #lidar_node,
         #launch_nav2,
         #launch_amcl,
@@ -148,4 +180,8 @@ def generate_launch_description():
         #localization_node,
         gps_node,
         navsat_transform_node,
+        swri_transform_util,
+        swri_transform,
+        map_odom_transform,
+        global_localization
    ])
