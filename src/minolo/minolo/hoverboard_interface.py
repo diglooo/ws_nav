@@ -44,6 +44,9 @@ class hoverboard_node(Node):
         self.battery_timer = self.create_timer(10,self.publish_battery_status)
         self.prev_ticks_r=-1
         self.prev_ticks_l=-1   
+
+        serial_recv_thread = threading.Thread(target=self.serial_comm_loop, daemon=True)
+        serial_recv_thread.start()
         
     def serial_comm_loop(self):
         with serial.Serial(port = self.serial_port_name, baudrate = self.baudrate) as ser:   
@@ -51,13 +54,13 @@ class hoverboard_node(Node):
             
             #Loop rate is dictated by the hoverboard firmware which
             #runs at 20Hz
-            while rclpy.ok():
-                #call this to process callbacks
-                rclpy.spin_once(self, timeout_sec=0.05)        
-                            
+            while rclpy.ok():                            
                 #Read 22 bytes from serial, read() is BLOCKING
                 serial_packet = ser.read(22)
-                                    
+
+                if ser.in_waiting>0:
+                    self.get_logger().warn(f'Serial pkt buffer with {ser.in_waiting} bytes')
+            
                 #Unpack data
                 recv_unpacked_data = struct.unpack('<Hhhhhhhhhhh',serial_packet)            
                 rx_checksum = (np.int16)(recv_unpacked_data[0]^recv_unpacked_data[1]^recv_unpacked_data[2]^recv_unpacked_data[3]^recv_unpacked_data[4]^recv_unpacked_data[5]^recv_unpacked_data[6]^recv_unpacked_data[7]^recv_unpacked_data[8]^recv_unpacked_data[9])
@@ -146,7 +149,7 @@ def main(args=None):
     rclpy.init(args=args)
     hover = hoverboard_node()
     try:
-        hover.serial_comm_loop()
+        rclpy.spin(hover)
     except KeyboardInterrupt:
         pass
 

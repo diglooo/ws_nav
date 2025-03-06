@@ -7,7 +7,7 @@ import threading
 import math
 import csv
 
-class TeleopReceiver(Node):
+class ImuReceiver(Node):
     def __init__(self):
         super().__init__('imu_receiver')
         self.declare_parameter('serial_port','/dev/ttyACM0')
@@ -24,8 +24,6 @@ class TeleopReceiver(Node):
         self.gyro_sensitivity = self.get_parameter('gyro_sensitivity').get_parameter_value().double_value
         self.frame_id = self.get_parameter('frame_id').get_parameter_value().string_value
         self.cmd_vel_publisher = self.create_publisher(Imu,self.output_topic,10)       
-        serial_recv_thread = threading.Thread(target=self.serial_recv, daemon=True)
-        serial_recv_thread.start()
         
     def _parse_serial_data(self, serial_data):
         try:
@@ -43,37 +41,32 @@ class TeleopReceiver(Node):
     def _scale_gy(self, value):
         return ((value * self.gyro_sensitivity) / 32768.0) * (math.pi / 180.0)
 
-    def serial_recv(self):
+    def serial_comm_loop(self):
         message = Imu()
         #self.file = open("imu_data.csv", mode="w", newline="")
-        #csvwriter = csv.writer(self.file)
-        
+        #csvwriter = csv.writer(self.file) 
         try:
             # Open the serial port
             with serial.Serial(port = self.serial_port_name, baudrate = self.baudrate, timeout=0.5) as ser:   
                 self.get_logger().info(f'{self.serial_port_name} port opened successfully')         
-                while True:
+                while rclpy.ok():
                     # Read a line from the serial port
-                    if ser.in_waiting > 0:
-                        serial_data = ser.readline().decode('utf-8')
-                        parsed_data = self._parse_serial_data(serial_data)
-                                               
-                        if parsed_data:           
-                            message.header.frame_id = self.frame_id
-                            message.header.stamp = self.get_clock().now().to_msg()               
-                            [ax, ay, az, gx, gy, gz] = parsed_data
-                            
-                            #csvwriter.writerow([self._scale_ac(ax), self._scale_ac(ay), self._scale_ac(az), self._scale_gy(gx), self._scale_gy(gy), self._scale_gy(gz)])
-                            message.linear_acceleration.x=-self._scale_ac(ax)
-                            message.linear_acceleration.y= - self._scale_ac(ay)
-                            message.linear_acceleration.z=  self._scale_ac(az)
-                            message.angular_velocity.x=self._scale_gy(gx)
-                            message.angular_velocity.y= - self._scale_gy(gy)
-                            message.angular_velocity.z=self._scale_gy(gz)                 
-                            self.cmd_vel_publisher.publish(message)
-                            
-                            
-                    time.sleep(0.001)                     
+                    serial_data = ser.readline().decode('utf-8')
+                    parsed_data = self._parse_serial_data(serial_data)
+                                            
+                    if parsed_data:           
+                        message.header.frame_id = self.frame_id
+                        message.header.stamp = self.get_clock().now().to_msg()               
+                        [ax, ay, az, gx, gy, gz] = parsed_data
+                        
+                        #csvwriter.writerow([self._scale_ac(ax), self._scale_ac(ay), self._scale_ac(az), self._scale_gy(gx), self._scale_gy(gy), self._scale_gy(gz)])
+                        message.linear_acceleration.x=-self._scale_ac(ax)
+                        message.linear_acceleration.y= - self._scale_ac(ay)
+                        message.linear_acceleration.z=  self._scale_ac(az)
+                        message.angular_velocity.x=self._scale_gy(gx)
+                        message.angular_velocity.y= - self._scale_gy(gy)
+                        message.angular_velocity.z=self._scale_gy(gz)                 
+                        self.cmd_vel_publisher.publish(message)                         
         except serial.SerialException as e:
             self.get_logger().error(e)
             return None
@@ -81,16 +74,11 @@ class TeleopReceiver(Node):
 def main(args=None):
     rclpy.init(args=args)
 
-    teleop_receiver = TeleopReceiver()
-    rclpy.spin(teleop_receiver)
-
-    # Destroy the node explicitly
-    # (optional - otherwise it will be done automatically
-    # when the garbage collector destroys the node object)
-    teleop_receiver.destroy_node()
-    
-    rclpy.shutdown()
-    #self.file.close()
+    imu_recv = ImuReceiver()
+    try:
+        imu_recv.serial_comm_loop()
+    except KeyboardInterrupt:
+        pass  
 
 
 if __name__ == '__main__':

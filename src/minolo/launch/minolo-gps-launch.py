@@ -24,6 +24,7 @@ def generate_launch_description():
         PythonLaunchDescriptionSource([os.path.join(get_package_share_directory('nav2_bringup'), 'launch'), '/navigation_launch.py']),
             launch_arguments={'params_file': os.path.join(robot_params_dir, "nav2_params.yaml")}.items(),
             )
+    
     launch_amcl=IncludeLaunchDescription(
         PythonLaunchDescriptionSource([os.path.join(get_package_share_directory('nav2_bringup'), 'launch'), '/localization_launch.py']),
             launch_arguments={'params_file': os.path.join(robot_params_dir, "nav2_params.yaml"),'map':'/home/diglo/ws_nav/src/maps/map_1737995541.yaml'}.items(),
@@ -31,8 +32,7 @@ def generate_launch_description():
 
     launch_slam = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([os.path.join(get_package_share_directory('slam_toolbox'), 'launch'), '/online_async_launch.py']),
-        launch_arguments={'slam_params_file': os.path.join(robot_params_dir, "slam_params.yaml")}.items(),
-        
+        launch_arguments={'slam_params_file': os.path.join(robot_params_dir, "slam_params.yaml")}.items(),     
         )
 
     lidar_node = LifecycleNode(package='ydlidar_ros2_driver',
@@ -95,20 +95,6 @@ def generate_launch_description():
             'autozero_vel_timeout_seconds': 0.1
         }])
     
-    lidar_odometry=Node(
-        package='rf2o_laser_odometry',
-        executable='rf2o_laser_odometry_node',
-        name='laser_odometry_node',
-        output='screen',
-        parameters=[{
-            'laser_scan_topic' : '/scan',
-            'odom_topic' : '/odom_lidar',
-            'publish_tf' : False,
-            'base_frame_id' : 'base_footprint',
-            'odom_frame_id' : 'odom',
-            'init_pose_from_topic' : '',
-            'freq' : 30.0}],)
-    
     localization_node=Node(
         package='robot_localization',
         executable='ekf_node',
@@ -117,15 +103,49 @@ def generate_launch_description():
         parameters=[os.path.join(robot_params_dir, 'state_estimation_params.yaml')],       
     )
     
+    rl_params_file = os.path.join(get_package_share_directory('minolo'), 'params', "navsat_robot_localization.yaml")   
+    navsat_transform_node=Node(
+        package="robot_localization",
+        executable="navsat_transform_node",
+        name="navsat_transform",
+        output="screen",
+        parameters=[rl_params_file],
+        remappings=[
+            ("imu_data", "imu_data"),
+            ("gps/fix", "gps/fix"),
+            ("gps/filtered", "gps/filtered"),
+            ("odometry/gps", "odometry/gps"),
+            ("odometry/filtered", "odometry/global"),
+        ],
+    )
+    
+    gps_node=Node(
+        package='um982_driver',
+        executable='um982_driver_node',
+        name='um982_driver',
+        output='screen',
+        parameters=[{
+            'serial_port': '/dev/serial/by-path/pci-0000:00:14.0-usb-0:2.4:1.0-port0',
+            'baudrate': 115200,
+            'caster_host': "euref-ip.asi.it",
+            'caster_port': 2101,
+            'mountpoint': "GENO00ITA0",
+            'username': "ddigloria",
+            'password': "cogo-2023",
+        }])
+    
+    
     return LaunchDescription([
-        motor_control_node,
-        motor_interface_node,
+        #motor_control_node,
+        #motor_interface_node,
         robot_state_publisher_node,
-        radio_teleop_receiver,
-        imu_receiver,
-        lidar_node,
-        launch_nav2,
+        #radio_teleop_receiver,
+        #imu_receiver,
+        #lidar_node,
+        #launch_nav2,
         #launch_amcl,
-        launch_slam,
-        #localization_node
+        #launch_slam,
+        #localization_node,
+        gps_node,
+        navsat_transform_node,
    ])

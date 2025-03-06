@@ -18,7 +18,7 @@ setup(
     license='Apache-2.0',
     tests_require=['pytest'],
     entry_points={
-        'console_scripts': ['receiver = imu_receiver.receiver:main',
+        'console_scripts': ['imu_receiver = imu_receiver.imu_receiver:main',
         ],
     },
 )

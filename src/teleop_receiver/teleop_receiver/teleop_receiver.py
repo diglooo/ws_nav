@@ -39,18 +39,17 @@ class TeleopReceiver(Node):
             self.get_logger().info(f'{self.serial_port_name} port opened successfully')         
             while rclpy.ok():
                 # Read a line from the serial port
-                if ser.in_waiting > 0:
-                    serial_data = ser.readline().decode('utf-8')
-                    parsed_data = self._parse_serial_data(serial_data)                 
-                    if parsed_data:
-                        x_raw = np.clip(pow(parsed_data[2] / 2100,3),-1.0,1.0)
-                        rz_raw= np.clip(pow(parsed_data[1] / 2000,3),-1.0,1.0)
-                        #self.get_logger().info(f'x={parsed_data[2]} rz={parsed_data[1]}')
-                        x_vel = -x_raw*0.4;
-                        rz_vel = -rz_raw*1.0;
-                        self.cmd_vel_msg.linear.x = x_vel  
-                        self.cmd_vel_msg.angular.z = rz_vel 
-                        self.cmd_vel_publisher.publish(self.cmd_vel_msg)                    
+                serial_data = ser.readline().decode('ascii')
+                parsed_data = self._parse_serial_data(serial_data)                 
+                if parsed_data:
+                    x_raw = np.clip(pow(parsed_data[2] / 2100,3),-1.0,1.0)
+                    rz_raw= np.clip(pow(parsed_data[1] / 2000,3),-1.0,1.0)
+                    #self.get_logger().info(f'x={parsed_data[2]} rz={parsed_data[1]}')
+                    x_vel = -x_raw*0.4;
+                    rz_vel = -rz_raw*1.0;
+                    self.cmd_vel_msg.linear.x = x_vel  
+                    self.cmd_vel_msg.angular.z = rz_vel 
+                    self.cmd_vel_publisher.publish(self.cmd_vel_msg)                    
 
 
 def main(args=None):

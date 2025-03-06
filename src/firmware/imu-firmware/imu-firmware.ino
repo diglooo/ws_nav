@@ -71,6 +71,28 @@ void setup()
 
   CurieIMU.accelerometerOffsetEnabled();
   CurieIMU.gyroOffsetEnabled();
+  
+  float offsets[6];
+  offsets[0] = CurieIMU.getGyroOffset(X_AXIS);
+  offsets[1] = CurieIMU.getGyroOffset(Y_AXIS);
+  offsets[2] = CurieIMU.getGyroOffset(Z_AXIS);
+  offsets[3] = CurieIMU.getAccelerometerOffset(X_AXIS);
+  offsets[4] = CurieIMU.getAccelerometerOffset(Y_AXIS);
+  offsets[5] = CurieIMU.getAccelerometerOffset(Z_AXIS);
+  
+  Serial.print("OFFSETS,");
+  Serial.print(offsets[0]);
+  Serial.print(",");
+  Serial.print(offsets[1]);
+  Serial.print(",");
+  Serial.print(offsets[2]);
+  Serial.print(",");
+  Serial.print(offsets[3]);
+  Serial.print(",");
+  Serial.print(offsets[4]);
+  Serial.print(",");
+  Serial.print(offsets[5]);
+  Serial.println();
 
   digitalWrite(ledPin, 0);
 }

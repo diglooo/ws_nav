@@ -24,7 +24,9 @@ setup(
     license='Apache-2.0',
     tests_require=['pytest'],
     entry_points={
-        'console_scripts': ['minolo_bringup = minolo.main_node:main','odometry = minolo.diff_odometry:main','motor_controller = minolo.diff_motor_controller:main',
+        'console_scripts': ['minolo_bringup = minolo.main_node:main',
+                            'odometry = minolo.diff_odometry:main',
+                            'motor_controller = minolo.diff_motor_controller:main',
                             'motor_interface = minolo.hoverboard_interface:main'
         ],
     },
