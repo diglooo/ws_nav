@@ -104,10 +104,10 @@ def generate_launch_description():
     )
     
     rl_params_file = os.path.join(get_package_share_directory('minolo'), 'params', "navsat_robot_localization.yaml")   
-    navsat_transform_node=Node(
+    navsat_transform=Node(
         package="robot_localization",
         executable="navsat_transform_node",
-        name="navsat_transform",
+        name="navsat_transform_node",
         output="screen",
         parameters=[rl_params_file],
         remappings=[
@@ -130,6 +130,17 @@ def generate_launch_description():
         ],
     )
     
+    local_localization=Node(
+        package="robot_localization",
+        executable="ekf_node",
+        name="ekf_filter_node_odom",
+        output="screen",
+        parameters=[rl_params_file],
+        remappings=[
+            ("odometry/filtered", "odometry/local"),
+        ],
+    )
+    
     gps_node=Node(
         package='um982_driver',
         executable='um982_driver_node',
@@ -145,7 +156,7 @@ def generate_launch_description():
             'password': "cogo-2023",
         }])
     
-    swri_transform_util=Node(
+    initialize_origin=Node(
         package="swri_transform_util",
         executable="initialize_origin.py",
         name="initialize_origin",
@@ -156,22 +167,22 @@ def generate_launch_description():
     swri_transform=Node(
         package="tf2_ros",
         executable="static_transform_publisher",
-        name="swri_transform",
+        name="tf2_ros",
         arguments=["0", "0", "0", "0", "0", "0", "map", "origin"]
     )
 
     map_odom_transform=Node(
         package="tf2_ros",
         executable="static_transform_publisher",
-        name="swri_transform",
+        name="tf2_ros",
         arguments=["0", "0", "0", "0", "0", "0", "map", "odom"]
     )
     
     return LaunchDescription([
-        motor_control_node,
-        motor_interface_node,
+        #motor_control_node,
+        #motor_interface_node,
         robot_state_publisher_node,
-        radio_teleop_receiver,
+        #radio_teleop_receiver,
         imu_receiver,
         #lidar_node,
         #launch_nav2,
@@ -179,9 +190,10 @@ def generate_launch_description():
         #launch_slam,
         #localization_node,
         gps_node,
-        navsat_transform_node,
-        swri_transform_util,
-        swri_transform,
-        map_odom_transform,
-        global_localization
+        #navsat_transform,
+        #initialize_origin,
+        global_localization,
+        #local_localization,
+        #map_odom_transform,
+        #global_localization
    ])

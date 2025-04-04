@@ -68,7 +68,7 @@
     </visual>
   </link>
 
-    <link name="gps_link">
+  <link name="gps_link">
     <visual>
       <geometry>
         <cylinder length="0.02" radius="0.025"/>

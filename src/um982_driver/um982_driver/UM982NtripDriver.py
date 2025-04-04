@@ -93,33 +93,57 @@ class UM982NtripDriver():
   
     def _msg_split(self, msg:str):
         return msg[1:msg.find('*')].split(',')
+        #return msg.split(',')
     
     def _PVTSLN_solver(self, msg:str):
         parts = self._msg_split(msg)
-        bestpos_hgt    = float(parts[3+7])
-        bestpos_lat    = float(parts[4+7])
-        bestpos_lon    = float(parts[5+7])
-        bestpos_hgtstd = float(parts[6+7])
-        bestpos_latstd = float(parts[7+7]) 
-        bestpos_lonstd = float(parts[8+7])
+        try:
+            bestpos_hgt    = float(parts[3+7])
+            bestpos_lat    = float(parts[4+7])
+            bestpos_lon    = float(parts[5+7])
+            bestpos_hgtstd = float(parts[6+7])
+            bestpos_latstd = float(parts[7+7]) 
+            bestpos_lonstd = float(parts[8+7])
+        except Exception as e:
+            bestpos_hgt    = 0
+            bestpos_lat    = 0
+            bestpos_lon    = 0
+            bestpos_hgtstd = 0
+            bestpos_latstd = 0
+            bestpos_lonstd = 0
+                   
         fix = (bestpos_hgt, bestpos_lat, bestpos_lon, bestpos_hgtstd, bestpos_latstd, bestpos_lonstd)
         return fix
 
     def _GNHPR_solver(self, msg:str):
         parts = self._msg_split(msg)
-        heading = float(parts[3-1])
-        pitch   = float(parts[4-1])
-        roll    = float(parts[5-1])
+        try:
+            heading = float(parts[3-1])
+            pitch   = float(parts[4-1])
+            roll    = float(parts[5-1])
+        except Exception as e:
+            heading = 0
+            pitch   = 0
+            roll    = 0
+  
         orientation = (heading, pitch, roll)
         return orientation
 
     def _BESTNAV_solver(self, msg:str):
         parts = self._msg_split(msg)
-        vel_hor_std = float(parts[-1]) 
-        vel_ver_std = float(parts[-2]) 
-        vel_ver     = float(parts[-3])
-        vel_heading = float(parts[-4])
-        vel_hor     = float(parts[-5])
+        try:
+            vel_hor_std = float(parts[-1]) 
+            vel_ver_std = float(parts[-2]) 
+            vel_ver     = float(parts[-3])
+            vel_heading = float(parts[-4])
+            vel_hor     = float(parts[-5])
+        except Exception as e:
+            vel_hor_std = 0
+            vel_ver_std = 0
+            vel_ver     = 0
+            vel_heading = 0
+            vel_hor     = 0
+     
         vel_north   = vel_hor * math.cos(math.radians(vel_heading))
         vel_east    = vel_hor * math.sin(math.radians(vel_heading))
         return (vel_east, vel_north, vel_ver, vel_hor_std, vel_hor_std, vel_ver_std)
@@ -139,16 +163,21 @@ class UM982NtripDriver():
                 pass
         
         # Read a line from the serial port
-        frame = self.serial_port.readline().decode('utf-8')
-        if not frame is None:
-            if frame.startswith("#PVTSLNA") and self._nmea_expend_crc(frame):
-                self.fix = self._PVTSLN_solver(frame)
-                bestpos_hgt, bestpos_lat, bestpos_lon, bestpos_hgtstd, bestpos_latstd, bestpos_lonstd = self.fix
-                self.transformer = self._wgs84_to_UTM(bestpos_lat, bestpos_lon)
-                self.utmpos = self.transformer.transform(bestpos_lon, bestpos_lat)
-            elif frame.startswith("$GNHPR") and self._nmea_crc(frame):
-                self.orientation = self._GNHPR_solver(frame)
-            elif frame.startswith("#BESTNAVA") and self._nmea_expend_crc(frame):
-                self.vel = self._BESTNAV_solver(frame)
-                #print(self.vel)                        
+        try:
+            frame = self.serial_port.readline().decode('utf-8')
+        except Exception as e:
+            self.get_logger().error(e)
+            return
+        else:  
+            if not frame is None:
+                if frame.startswith("#PVTSLNA") and self._nmea_expend_crc(frame):
+                    self.fix = self._PVTSLN_solver(frame)
+                    bestpos_hgt, bestpos_lat, bestpos_lon, bestpos_hgtstd, bestpos_latstd, bestpos_lonstd = self.fix
+                    self.transformer = self._wgs84_to_UTM(bestpos_lat, bestpos_lon)
+                    self.utmpos = self.transformer.transform(bestpos_lon, bestpos_lat)
+                elif frame.startswith("$GNHPR") and self._nmea_crc(frame):
+                    self.orientation = self._GNHPR_solver(frame)
+                elif frame.startswith("#BESTNAVA") and self._nmea_expend_crc(frame):
+                    self.vel = self._BESTNAV_solver(frame)
+                                      
  
